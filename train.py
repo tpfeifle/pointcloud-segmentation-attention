@@ -47,8 +47,12 @@ def train(args):
         classifier.train()
         total_train_loss = 0
         correct_examples = 0
+        total_points = 0
         for batch_idx, data in enumerate(train_dataloader, 0):
+            if batch_idx > 4:
+                continue
             pointcloud, label = data
+            print(pointcloud.shape, label.shape)
             pointcloud = pointcloud.permute(0, 2, 1)
             # TODO activate cuda again
             # pointcloud, label = pointcloud.cuda(), label.cuda()
@@ -56,12 +60,7 @@ def train(args):
             optimizer.zero_grad()
             pred = classifier(pointcloud)
 
-            # print(f"labels in : {label.min()} - {label.max()}")
-            # print(f"preds in : {pred.min()} - {pred.max()}")
-            # print(pred.shape, label.shape)
             loss = loss_fun(pred, label)
-            # loss = F.nll_loss(pred, label)
-            # loss = F.nll_loss(pred, label)
             pred_choice = pred.max(1)[1]
 
             loss.backward()
@@ -69,13 +68,15 @@ def train(args):
 
             total_train_loss += loss.item()
             current_correct_examples = pred_choice.eq(label.view(-1)).sum().item()
-            correct_examples += correct_examples
+            correct_examples += current_correct_examples
+            total_points += label.shape[1]
+
             print(f"correct examples: {current_correct_examples}")
-            print(f"current accuracy: {100.0 * current_correct_examples /label.shape[1]}")
+            print(f"current accuracy: {100.0 * current_correct_examples / label.shape[1]}")
 
         print("Train loss: {:.4f}, train accuracy: {:.2f}%".format(total_train_loss / train_batches,
-                                                                   correct_examples / train_examples * 100.0))
-
+                                                                   correct_examples / total_points * 100.0))
+        print("Evaluation:")
         # eval one epoch
         classifier.eval()
         correct_examples = 0
@@ -87,10 +88,14 @@ def train(args):
 
             pred = classifier(pointcloud)
             pred_choice = pred.max(1)[1]
-            correct = pred_choice.eq(label.view(-1)).sum()
-            correct_examples += correct.item()
+            current_correct_examples = pred_choice.eq(label.view(-1)).sum().item()
+            correct_examples += current_correct_examples
+            total_points += label.shape[1]
 
-        print("Eval accuracy: {:.2f}%".format(correct_examples / test_examples * 100.0))
+            print(f"correct examples: {current_correct_examples}")
+            print(f"current accuracy: {100.0 * current_correct_examples / label.shape[1]}")
+
+        print("Eval accuracy: {:.2f}%".format(correct_examples / total_points * 100.0))
 
 
 if __name__ == '__main__':
