@@ -32,7 +32,7 @@ def train(num_epochs, batch_size, ckpt_dir):
 
     # classifier = PointNetSeg(num_classes=num_classes)
     # classifier = PointNet2Seg(num_classes=num_classes)
-    classifier = PointNet2SemSeg(num_classes=)
+    classifier = PointNet2SemSeg(num_classes=1)
 
     # load params
     print("Load parameters...")

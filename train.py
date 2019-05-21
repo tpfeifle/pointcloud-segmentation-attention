@@ -28,7 +28,7 @@ def train(args):
     test_batches = len(test_dataloader)
 
     # classifier = PointNet2ClsSsg()
-    classifier = PointNet2SemSeg(num_classes=41) # TODO check if scannet really has 41 classes
+    classifier = PointNet2SemSeg(num_classes=40)
     optimizer = optim.Adam(classifier.parameters())
 
     # define loss function
@@ -56,9 +56,9 @@ def train(args):
             optimizer.zero_grad()
             pred = classifier(pointcloud)
 
-            print(f"labels in : {label.min()} - {label.max()}")
-            print(f"preds in : {pred.min()} - {pred.max()}")
-            print(pred.shape, label.shape)
+            # print(f"labels in : {label.min()} - {label.max()}")
+            # print(f"preds in : {pred.min()} - {pred.max()}")
+            # print(pred.shape, label.shape)
             loss = loss_fun(pred, label)
             # loss = F.nll_loss(pred, label)
             # loss = F.nll_loss(pred, label)
@@ -68,7 +68,10 @@ def train(args):
             optimizer.step()
 
             total_train_loss += loss.item()
-            correct_examples += pred_choice.eq(label.view(-1)).sum().item()
+            current_correct_examples = pred_choice.eq(label.view(-1)).sum().item()
+            correct_examples += correct_examples
+            print(f"correct examples: {current_correct_examples}")
+            print(f"current accuracy: {100.0 * current_correct_examples /label.shape[1]}")
 
         print("Train loss: {:.4f}, train accuracy: {:.2f}%".format(total_train_loss / train_batches,
                                                                    correct_examples / train_examples * 100.0))
@@ -88,6 +91,7 @@ def train(args):
             correct_examples += correct.item()
 
         print("Eval accuracy: {:.2f}%".format(correct_examples / test_examples * 100.0))
+
 
 if __name__ == '__main__':
     # TODO batch_size can only be 1 at the moment?

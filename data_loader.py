@@ -139,20 +139,34 @@ class ScanNetDataset(data.Dataset):
         return len(self.items)
 
     def __getitem__(self, idx: int):
+        # load numpy arrays from disk
         point = np.load(self.points[idx])
         color = np.load(self.colors[idx])
-        label = np.load(self.labels[idx])  # TODO labels go from 0 to 40??
+        label = np.load(self.labels[idx]) - 1  # TODO labels go from 0 to 39
+
+        # mask invalid labels
+        mask = np.logical_and(label >= 0, label < 40)
+        point = point[mask]
+        color = color[mask]
+        label = label[mask]
+
         # TODO remove subsampling in following line
-        # point, color, label = get_random_subset([point, color, label], 5000)
+        point, color, label = get_random_subset([point, color, label], 5000)
+
+        # convert to torch tensors
         point = torch.from_numpy(point)
         color = torch.from_numpy(color)
         label = torch.from_numpy(label).type(torch.LongTensor)
-        # assert point.shape[0] == color.shape[0] == label.shape[0]
+        assert point.shape[0] == color.shape[0] == label.shape[0]
         sample = {'point': point, 'color': color, 'label': label}
         return sample
 
 
 class ScanNetDatasetWrapper(ScanNetDataset):
+    """
+    A wrapper, which only loads points and labels, not color
+    """
+
     def __getitem__(self, idx):
         sample = super(ScanNetDatasetWrapper, self).__getitem__(idx)
         return sample['point'], sample['label']
