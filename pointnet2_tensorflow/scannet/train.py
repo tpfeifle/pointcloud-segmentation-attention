@@ -27,7 +27,7 @@ parser.add_argument('--model', default='model', help='Model name [default: model
 parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=8192, help='Point Number [default: 8192]')
 parser.add_argument('--max_epoch', type=int, default=201, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=16, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -270,7 +270,7 @@ def eval_one_epoch(sess, ops, test_writer):
     global EPOCH_CNT
     is_training = False
     test_idxs = np.arange(0, len(TEST_DATASET))
-    num_batches = len(TEST_DATASET) / BATCH_SIZE
+    num_batches = len(TEST_DATASET) // BATCH_SIZE
 
     total_correct = 0
     total_seen = 0
@@ -315,16 +315,15 @@ def eval_one_epoch(sess, ops, test_writer):
             total_correct_class[l] += np.sum((pred_val == l) & (batch_label == l) & (batch_smpw > 0))
 
         for b in range(batch_label.shape[0]):
-            _, uvlabel, _ = pc_util.point_cloud_label_to_surface_voxel_label_fast(aug_data[b, batch_smpw[b, :] > 0, :],
-                                                                                  np.concatenate((np.expand_dims(
-                                                                                      batch_label[
-                                                                                          b, batch_smpw[b, :] > 0], 1),
-                                                                                                  np.expand_dims(
-                                                                                                      pred_val[
-                                                                                                          b, batch_smpw[
-                                                                                                             b, :] > 0],
-                                                                                                      1)), axis=1),
-                                                                                  res=0.02)
+            _, uvlabel, _ = \
+                pc_util.point_cloud_label_to_surface_voxel_label_fast(aug_data[b, batch_smpw[b, :] > 0, :],
+                                                                      np.concatenate((np.expand_dims(
+                                                                          batch_label[b, batch_smpw[b, :] > 0], 1),
+                                                                                      np.expand_dims(pred_val[
+                                                                                                         b, batch_smpw[
+                                                                                                            b, :] > 0],
+                                                                                                     1)), axis=1),
+                                                                      res=0.02)
             total_correct_vox += np.sum((uvlabel[:, 0] == uvlabel[:, 1]) & (uvlabel[:, 0] > 0))
             total_seen_vox += np.sum(uvlabel[:, 0] > 0)
             tmp, _ = np.histogram(uvlabel[:, 0], range(22))
