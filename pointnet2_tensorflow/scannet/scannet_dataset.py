@@ -2,8 +2,8 @@ import pickle
 import os
 import sys
 import numpy as np
-import pc_util
-import scene_util
+from scannet import pc_util
+from scannet import scene_util
 
 
 class ScannetDataset():
@@ -72,9 +72,10 @@ class ScannetDatasetWholeScene():
         self.root = root
         self.split = split
         self.data_filename = os.path.join(self.root, 'scannet_%s.pickle' % (split))
+        print(self.data_filename)
         with open(self.data_filename, 'rb') as fp:
-            self.scene_points_list = pickle.load(fp)
-            self.semantic_labels_list = pickle.load(fp)
+            self.scene_points_list = pickle.load(fp, encoding='latin1')
+            self.semantic_labels_list = pickle.load(fp, encoding='latin1')
         if split == 'train':
             labelweights = np.zeros(21)
             for seg in self.semantic_labels_list:
@@ -133,6 +134,7 @@ class ScannetDatasetVirtualScan():
         self.root = root
         self.split = split
         self.data_filename = os.path.join(self.root, 'scannet_%s.pickle' % (split))
+        print(self.data_filename)
         with open(self.data_filename, 'rb') as fp:
             self.scene_points_list = pickle.load(fp)
             self.semantic_labels_list = pickle.load(fp)
@@ -178,7 +180,7 @@ class ScannetDatasetVirtualScan():
 
 
 if __name__ == '__main__':
-    d = ScannetDatasetWholeScene(root='./data', split='test', npoints=8192)
+    d = ScannetDatasetWholeScene(root='data/', split='test', npoints=8192)
     labelweights_vox = np.zeros(21)
     for ii in range(len(d)):
         print(ii)

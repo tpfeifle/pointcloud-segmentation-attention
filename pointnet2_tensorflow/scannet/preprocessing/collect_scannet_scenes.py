@@ -1,4 +1,4 @@
-import scannet_util
+from scannet.preprocessing import scannet_util
 
 CLASS_NAMES = scannet_util.g_label_names
 RAW2SCANNET = scannet_util.g_raw2scannet
@@ -11,7 +11,7 @@ BASE_DIR = os.path.dirname(__file__)
 
 sys.path.append(BASE_DIR)
 sys.path.append('../')
-import pc_util
+from scannet import pc_util
 
 SCANNET_DIR = 'scannet_clean_2'
 SCENE_NAMES = [line.rstrip() for line in open('scannet_all.txt')]
@@ -95,7 +95,7 @@ if __name__=='__main__':
         try:
             out_filename = scene_name+'.npy' # scene0000_00.npy
             collect_one_scene_data_label(scene_name, os.path.join(output_folder, out_filename))
-        except Exception, e:
+        except Exception as e:
             log_string(scene_name+'ERROR!!')
             log_string(str(e))
     
