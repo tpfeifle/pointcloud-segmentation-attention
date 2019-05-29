@@ -13,9 +13,9 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'models'))
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
-import provider
-import tf_util
-import part_dataset_all_normal
+from utils import provider
+from utils import tf_util
+from part_seg import part_dataset_all_normal
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
