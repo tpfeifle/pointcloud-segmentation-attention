@@ -19,7 +19,7 @@ from utils import tf_util
 from scannet import pc_util
 
 sys.path.append(os.path.join(ROOT_DIR, 'data_prep'))
-from scannet import scannet_dataset
+from attention_scannet import scannet_dataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
@@ -27,7 +27,7 @@ parser.add_argument('--model', default='model', help='Model name [default: model
 parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=8192, help='Point Number [default: 8192]')
 parser.add_argument('--max_epoch', type=int, default=201, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=16, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -52,7 +52,7 @@ DECAY_RATE = FLAGS.decay_rate
 # MODEL_FILE = os.path.join(BASE_DIR, FLAGS.model + '.py')
 
 MODEL = importlib.import_module("models.pointnet2_sem_seg")
-MODEL_FILE = os.path.join('/home/tim/.max_remote_deployment/pointnet2_tensorflow/models/pointnet2_sem_seg.py')
+MODEL_FILE = ROOT_DIR + '/models/pointnet2_sem_seg.py'
 
 LOG_DIR = FLAGS.log_dir
 if not os.path.exists(LOG_DIR): os.mkdir(LOG_DIR)
@@ -72,7 +72,7 @@ NUM_CLASSES = 21
 
 # Shapenet official train/test split
 # DATA_PATH = os.path.join(ROOT_DIR, 'data', 'scannet_data_pointnet2')
-DATA_PATH = ROOT_DIR + "/scannet/data/"
+DATA_PATH = "/home/tim/data/"
 TRAIN_DATASET = scannet_dataset.ScannetDataset(root=DATA_PATH, npoints=NUM_POINT, split='train')
 TEST_DATASET = scannet_dataset.ScannetDataset(root=DATA_PATH, npoints=NUM_POINT, split='test')
 TEST_DATASET_WHOLE_SCENE = scannet_dataset.ScannetDatasetWholeScene(root=DATA_PATH, npoints=NUM_POINT, split='test')
@@ -122,6 +122,8 @@ def train():
             print("--- Get model and loss")
             # Get model and loss 
             pred, end_points = MODEL.get_model(pointclouds_pl, is_training_pl, NUM_CLASSES, bn_decay=bn_decay)
+            print("pred shape: ", pred.shape)
+            print("label shape: ", labels_pl.shape)
             loss = MODEL.get_loss(pred, labels_pl, smpws_pl)
             tf.summary.scalar('loss', loss)
 
@@ -385,6 +387,7 @@ def eval_whole_scene_one_epoch(sess, ops, test_writer):
     extra_batch_label = np.zeros((0, NUM_POINT))
     extra_batch_smpw = np.zeros((0, NUM_POINT))
     for batch_idx in range(num_batches):
+        log_string('- working on batch %03d of %03d' % (batch_idx, num_batches))
         if not is_continue_batch:
             batch_data, batch_label, batch_smpw = TEST_DATASET_WHOLE_SCENE[batch_idx]
             batch_data = np.concatenate((batch_data, extra_batch_data), axis=0)
