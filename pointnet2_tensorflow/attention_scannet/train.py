@@ -40,9 +40,9 @@ FLAGS = parser.parse_args()
 EPOCH_CNT = 0
 
 BATCH_SIZE = 1  #FLAGS.batch_size
-NUM_POINT = 16384 #FLAGS.num_point
-MAX_EPOCH = 500 # FLAGS.max_epoch
-BASE_LEARNING_RATE = 0.0005 # FLAGS.learning_rate
+NUM_POINT = 8192 #FLAGS.num_point
+MAX_EPOCH = 3 # FLAGS.max_epoch
+BASE_LEARNING_RATE = 0.001 # FLAGS.learning_rate
 GPU_INDEX = FLAGS.gpu
 MOMENTUM = FLAGS.momentum
 OPTIMIZER = FLAGS.optimizer

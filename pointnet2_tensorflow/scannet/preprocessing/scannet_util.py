@@ -1,9 +1,9 @@
-
-
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 g_label_names = ['unannotated', 'wall', 'floor', 'chair', 'table', 'desk', 'bed', 'bookshelf', 'sofa', 'sink', 'bathtub', 'toilet', 'curtain', 'counter', 'door', 'window', 'shower curtain', 'refridgerator', 'picture', 'cabinet', 'otherfurniture']
 
 def get_raw2scannet_label_map():
-    lines = [line.rstrip() for line in open('scannet-labels.combined.tsv')]
+    lines = [line.rstrip() for line in open(BASE_DIR + '/scannet-labels.combined.tsv')]
     lines = lines[1:]
     raw2scannet = {}
     for i in range(len(lines)):

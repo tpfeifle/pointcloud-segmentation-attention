@@ -11,7 +11,7 @@ class ScannetDataset():
         self.npoints = npoints
         self.root = root
         self.split = split
-        self.data_filename = os.path.join(self.root, 'parts/single_scene.pickle')
+        self.data_filename = os.path.join(self.root, 'parts/single_scene3.pickle')
         with open(self.data_filename, 'rb') as fp:
             self.scene_points_list = pickle.load(fp, encoding='latin1')
             self.semantic_labels_list = pickle.load(fp, encoding='latin1')
@@ -73,7 +73,7 @@ class ScannetDatasetWholeScene():
         self.npoints = npoints
         self.root = root
         self.split = split
-        self.data_filename = os.path.join(self.root, 'parts/single_scene.pickle')
+        self.data_filename = os.path.join(self.root, 'parts/single_scene3.pickle')
         print(self.data_filename)
         with open(self.data_filename, 'rb') as fp:
             self.scene_points_list = pickle.load(fp, encoding='latin1')

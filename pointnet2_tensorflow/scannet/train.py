@@ -27,7 +27,7 @@ parser.add_argument('--model', default='model', help='Model name [default: model
 parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=8192, help='Point Number [default: 8192]')
 parser.add_argument('--max_epoch', type=int, default=201, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=16, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -52,7 +52,7 @@ DECAY_RATE = FLAGS.decay_rate
 # MODEL_FILE = os.path.join(BASE_DIR, FLAGS.model + '.py')
 
 MODEL = importlib.import_module("models.pointnet2_sem_seg")
-MODEL_FILE = os.path.join('/home/tim/.max_remote_deployment/pointnet2_tensorflow/models/pointnet2_sem_seg.py')
+MODEL_FILE = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/models/pointnet2_sem_seg.py')
 
 LOG_DIR = FLAGS.log_dir
 if not os.path.exists(LOG_DIR): os.mkdir(LOG_DIR)
@@ -72,7 +72,7 @@ NUM_CLASSES = 21
 
 # Shapenet official train/test split
 # DATA_PATH = os.path.join(ROOT_DIR, 'data', 'scannet_data_pointnet2')
-DATA_PATH = ROOT_DIR + "/scannet/data/"
+DATA_PATH = "/home/tim/data"
 TRAIN_DATASET = scannet_dataset.ScannetDataset(root=DATA_PATH, npoints=NUM_POINT, split='train')
 TEST_DATASET = scannet_dataset.ScannetDataset(root=DATA_PATH, npoints=NUM_POINT, split='test')
 TEST_DATASET_WHOLE_SCENE = scannet_dataset.ScannetDatasetWholeScene(root=DATA_PATH, npoints=NUM_POINT, split='test')
