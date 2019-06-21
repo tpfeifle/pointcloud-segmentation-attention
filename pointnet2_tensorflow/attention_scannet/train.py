@@ -10,6 +10,7 @@ import os
 import sys
 import time
 import pickle
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)  # model
@@ -36,13 +37,12 @@ parser.add_argument('--decay_step', type=int, default=200000, help='Decay step f
 parser.add_argument('--decay_rate', type=float, default=0.7, help='Decay rate for lr decay [default: 0.7]')
 FLAGS = parser.parse_args()
 
-
 EPOCH_CNT = 0
 
-BATCH_SIZE = 1  #FLAGS.batch_size
-NUM_POINT = 16384 #FLAGS.num_point
-MAX_EPOCH = 500 # FLAGS.max_epoch
-BASE_LEARNING_RATE = 0.0005 # FLAGS.learning_rate
+BATCH_SIZE = 1  # FLAGS.batch_size
+NUM_POINT = 16384  # FLAGS.num_point
+MAX_EPOCH = 500  # FLAGS.max_epoch
+BASE_LEARNING_RATE = 0.0005  # FLAGS.learning_rate
 GPU_INDEX = FLAGS.gpu
 MOMENTUM = FLAGS.momentum
 OPTIMIZER = FLAGS.optimizer
@@ -173,6 +173,10 @@ def train():
                'step': batch,
                'end_points': end_points}
 
+        # get number of model parameters
+        print(np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
+        # TODO paramteres seem to be same for this and normal pointnet++, investigate further on this!
+
         best_acc = -1
         for epoch in range(MAX_EPOCH):
             log_string('**** EPOCH %03d ****' % (epoch))
@@ -190,8 +194,9 @@ def train():
                 save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
                 log_string("Model saved in file: %s" % save_path)
 
-            if epoch == MAX_EPOCH-1:
+            if epoch == MAX_EPOCH - 1:
                 eval_whole_scene_one_epoch(sess, ops, test_writer)
+
 
 def get_batch_wdp(dataset, idxs, start_idx, end_idx):
     bsize = end_idx - start_idx
@@ -204,7 +209,7 @@ def get_batch_wdp(dataset, idxs, start_idx, end_idx):
         batch_label[i, :] = seg
         batch_smpw[i, :] = smpw
 
-        dropout_ratio = 0 # np.random.random() * 0.875  # 0-0.875
+        dropout_ratio = 0  # np.random.random() * 0.875  # 0-0.875
         drop_idx = np.where(np.random.random((ps.shape[0])) <= dropout_ratio)[0]
         batch_data[i, drop_idx, :] = batch_data[i, 0, :]
         batch_label[i, drop_idx] = batch_label[i, 0]

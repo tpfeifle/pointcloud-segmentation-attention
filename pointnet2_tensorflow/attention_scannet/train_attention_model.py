@@ -19,7 +19,7 @@ NUM_CLASSES = 21
 
 OPTIMIZER = 'adam'
 MOMENTUM = 0.9
-BASE_LEARNING_RATE = 0.001
+BASE_LEARNING_RATE = 0.002
 DECAY_STEP = 200000
 DECAY_RATE = 0.7
 
@@ -28,9 +28,9 @@ BN_DECAY_DECAY_RATE = 0.5
 BN_DECAY_DECAY_STEP = float(DECAY_STEP)
 BN_DECAY_CLIP = 0.99
 
-LOG_DIR = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/log/%s' % datetime.now().isoformat())
+LOG_DIR = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/log/%s_lr=2e-3' % datetime.now().isoformat())
 if not os.path.exists(LOG_DIR): os.mkdir(LOG_DIR)
-MAX_EPOCH = 2000
+MAX_EPOCH = 5000
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
 
 DATA_PATH = "/home/tim/data/"
@@ -135,6 +135,8 @@ def train():
                'merged': merged,
                'step': batch}
 
+        # get number of model parameters
+        print(np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
         best_acc = -1
         for epoch in range(MAX_EPOCH):
             log_string('**** EPOCH %03d ****' % (epoch))
@@ -142,6 +144,8 @@ def train():
 
             train_one_epoch(sess, ops, train_writer)
             acc = eval_one_epoch(sess, ops, test_writer)
+            if epoch % 1000 == 0:
+                learning_rate = learning_rate / 2
             # TODO implement the following
             # if epoch % 5 == 0:
             #   acc = eval_one_epoch(sess, ops, test_writer)

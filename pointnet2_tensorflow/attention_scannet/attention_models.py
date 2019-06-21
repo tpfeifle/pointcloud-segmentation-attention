@@ -1,9 +1,11 @@
 import tensorflow as tf
 
 from utils import tf_util
-from utils.pointnet_util import pointnet_fp_module, sample_and_group, sample_and_group_all
-from attention_scannet.attention_layer import AttentionLayer, AttentionNetLayer
+from utils.pointnet_util import pointnet_fp_module
+from attention_scannet.attention_layer import AttentionNetLayer
 
+
+# TODO think of using skip links
 
 def placeholder_inputs(batch_size, num_point):
     pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 3))
@@ -15,11 +17,14 @@ def placeholder_inputs(batch_size, num_point):
 class AttentionNetModel(tf.keras.layers.Layer):
     def __init__(self, is_training, bn_decay, num_class):
         super().__init__()
-        self.l1 = AttentionNetLayer(npoint=1024, radius=0.1, nsample=32, out_dim=64, is_training=is_training,
-                                    bn_decay=bn_decay)
-        self.l2 = AttentionNetLayer(256, 0.1, 32, 128, is_training, bn_decay)
-        self.l3 = AttentionNetLayer(64, 0.1, 32, 256, is_training, bn_decay)
-        self.l4 = AttentionNetLayer(16, 0.1, 32, 512, is_training, bn_decay)
+        self.l1 = AttentionNetLayer(npoint=1024, out_dim=64, inner_dimensions=[64, 64], radius=0.1, nsample=32,
+                                    is_training=is_training)
+        self.l2 = AttentionNetLayer(npoint=256, out_dim=128, inner_dimensions=[128, 128], radius=0.1, nsample=32,
+                                    is_training=is_training)
+        self.l3 = AttentionNetLayer(npoint=64, out_dim=256, inner_dimensions=[256, 256], radius=0.1, nsample=32,
+                                    is_training=is_training)
+        self.l4 = AttentionNetLayer(npoint=16, out_dim=512, inner_dimensions=[512, 512], radius=0.1, nsample=32,
+                                    is_training=is_training)
         self.is_training = is_training
         self.bn_decay = bn_decay
         self.num_class = num_class

@@ -172,6 +172,9 @@ def train():
                'step': batch,
                'end_points': end_points}
 
+        # get number of model parameters
+        print("parameters: ", np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
+
         best_acc = -1
         for epoch in range(MAX_EPOCH):
             log_string('**** EPOCH %03d ****' % (epoch))

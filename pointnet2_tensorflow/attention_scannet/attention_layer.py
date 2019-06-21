@@ -1,3 +1,5 @@
+from typing import List
+
 import tensorflow as tf
 
 from utils.pointnet_util import sample_and_group
@@ -62,8 +64,42 @@ class AttentionLayer(tf.keras.layers.Layer):
         return out
 
 
+class InnerAttentionLayer(tf.keras.layers.Layer):
+    def __init__(self, output_dim, key_dim):
+        super(InnerAttentionLayer, self).__init__(name="ScannetAttentionLayer")
+        self.output_dim = output_dim
+        self.key_dim = key_dim
+
+    def build(self, input_shape):
+        self.query_net = tf.layers.Dense(self.key_dim, input_shape=(3,))
+        self.key_net = tf.layers.Dense(self.key_dim, input_shape=(input_shape[-1],))
+        self.value_net = tf.layers.Dense(self.output_dim, input_shape=(input_shape[-1],))
+
+    def call(self, input, **kwargs):
+        # here the we create a query vector for each point
+        Q = self.query_net(input)
+        K = self.key_net(input)
+        V = self.value_net(input)
+        weights = tf.matmul(Q, K, transpose_b=True)
+        weights = weights / tf.sqrt(tf.to_float(self.key_dim))
+        weights = tf.nn.softmax(weights, dim=-1)
+        out = tf.matmul(weights, V)
+        out = tf.squeeze(out, axis=0)
+        return out
+
+
 class AttentionNetLayer(tf.keras.layers.Layer):
-    def __init__(self, npoint, radius, nsample, out_dim, is_training, bn_decay, bn=True):
+    def __init__(self, npoint: int, out_dim: int, inner_dimensions: List[int], is_training: bool = True,
+                 radius: float = 0.1, nsample: int = 32, bn: bool = True):
+        """
+
+        :param npoint: number of groups to sample
+        :param radius:  radius of the ball query
+        :param nsample: number of samples in a group
+        :param out_dim: output dimension for each point vector
+        :param is_training:
+        :param bn:
+        """
         super().__init__()
         key_dim = out_dim
         self.attention_layer = AttentionLayer(out_dim, key_dim)
@@ -71,8 +107,8 @@ class AttentionNetLayer(tf.keras.layers.Layer):
         self.radius = radius
         self.nsample = nsample
         self.is_training = is_training
-        self.bn_decay = bn_decay
         self.bn = bn
+        self.inner_layers = [InnerAttentionLayer(i, key_dim) for i in inner_dimensions]
 
     def call(self, inputs, **kwargs):
         # Sample and Grouping
@@ -86,11 +122,23 @@ class AttentionNetLayer(tf.keras.layers.Layer):
         # print("after sample and group")
 
         # Point Feature Embedding
+        # print(f"shape of new_points: {new_points.shape}")
+        for inner_layer in self.inner_layers:
+            new_points = inner_layer([new_points])
+            # print(f"done {inner_layer}")
+            # print(f"shape of new_points: {new_points.shape}")
+        # TODO get not only coordinates of point as query vector, but the feature vector new_point:
         new_points = self.attention_layer([new_points, new_xyz])
-        # print("new points shape: ", new_points.shape)
+        # print("done end layer")
+        # print(f"shape of new_points: {new_points.shape}")
 
         # new_points = tf.squeeze(new_points, [2]) # (batch_size, npoints, mlp2[-1]) # TODO check if this line is needed
+        # TODO do we want to copy the coordinates to the resulting vectors?
+        #  (don't think so, sample_and_group() does this?)
         return [new_xyz, new_points, idx]
+
+
+# TODO add multi head attention
 
 
 if __name__ == '__main__':
@@ -100,7 +148,8 @@ if __name__ == '__main__':
     # init_op = tf.global_variables_initializer()
     # sess.run(init_op)
     # print(sess.run(res))
-    layer = AttentionNetLayer(npoint=1024, radius=0.1, nsample=32, out_dim=64, is_training=True, bn_decay=None)
+    layer = AttentionNetLayer(npoint=1024, out_dim=64, inner_dimensions=[128, 96], radius=0.1, nsample=32,
+                              is_training=True)
     sess = tf.Session()
     input1 = tf.zeros((32, 2048, 3))
     input2 = tf.zeros((0,))
