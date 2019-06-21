@@ -1,0 +1,6 @@
+Attention Point Net:
+ - Multi head
+ - Skip connections
+ - Batchnorm
+ - feed forward aus 2 layern + relu (dazwischen)
+ -
