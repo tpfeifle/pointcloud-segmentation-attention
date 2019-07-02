@@ -31,8 +31,8 @@ def train(epochs=1, batchsize=16):
     sess.run(variable_init)
 
     for i in range(100):
-        _, loss_val, pred_val, accuracy = sess.run([train_op, loss, prediction, accuracy])
-        print(f"loss: {loss_val}, \taccuracy: {accuracy}")
+        _, loss_val, pred_val, acc_val = sess.run([train_op, loss, prediction, accuracy])
+        print(f"loss: {loss_val}, \taccuracy: {acc_val}")
 
 
 if __name__ == '__main__':
