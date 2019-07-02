@@ -17,13 +17,21 @@ def placeholder_inputs(batch_size, num_point):
 class AttentionNetModel(tf.keras.layers.Layer):
     def __init__(self, is_training, bn_decay, num_class):
         super().__init__()
-        self.l1 = AttentionNetLayer(npoint=1024, out_dim=64, inner_dimensions=[64, 64], radius=0.1, nsample=32,
+        # self.l1 = AttentionNetLayer(npoint=1024, out_dim=64, inner_dimensions=[64, 64], radius=0.1, nsample=32,
+        #                             is_training=is_training)
+        # self.l2 = AttentionNetLayer(npoint=256, out_dim=128, inner_dimensions=[128, 128], radius=0.1, nsample=32,
+        #                             is_training=is_training)
+        # self.l3 = AttentionNetLayer(npoint=64, out_dim=256, inner_dimensions=[256, 256], radius=0.1, nsample=32,
+        #                             is_training=is_training)
+        # self.l4 = AttentionNetLayer(npoint=16, out_dim=512, inner_dimensions=[512, 512], radius=0.1, nsample=32,
+        #                             is_training=is_training)
+        self.l1 = AttentionNetLayer(npoint=1024, out_dim=8, inner_dimensions=[8], radius=0.1, nsample=32,
                                     is_training=is_training)
-        self.l2 = AttentionNetLayer(npoint=256, out_dim=128, inner_dimensions=[128, 128], radius=0.1, nsample=32,
+        self.l2 = AttentionNetLayer(npoint=256, out_dim=16, inner_dimensions=[16], radius=0.1, nsample=32,
                                     is_training=is_training)
-        self.l3 = AttentionNetLayer(npoint=64, out_dim=256, inner_dimensions=[256, 256], radius=0.1, nsample=32,
+        self.l3 = AttentionNetLayer(npoint=64, out_dim=32, inner_dimensions=[32], radius=0.1, nsample=32,
                                     is_training=is_training)
-        self.l4 = AttentionNetLayer(npoint=16, out_dim=512, inner_dimensions=[512, 512], radius=0.1, nsample=32,
+        self.l4 = AttentionNetLayer(npoint=16, out_dim=64, inner_dimensions=[64], radius=0.1, nsample=32,
                                     is_training=is_training)
         self.is_training = is_training
         self.bn_decay = bn_decay
@@ -60,13 +68,13 @@ class AttentionNetModel(tf.keras.layers.Layer):
         l0_xyz = inputs
         l0_points = None
         l1_xyz, l1_points, l1_indices = self.l1([l0_xyz, tf.zeros([0])])
-        print("l1_points shape: ", l1_points.shape)
+        # print("l1_points shape: ", l1_points.shape)
         l2_xyz, l2_points, l2_indices = self.l2([l1_xyz, l1_points])
-        print("l2_points shape: ", l2_points.shape)
+        # print("l2_points shape: ", l2_points.shape)
         l3_xyz, l3_points, l3_indices = self.l3([l2_xyz, l2_points])
-        print("l3_points shape: ", l3_points.shape)
+        # print("l3_points shape: ", l3_points.shape)
         l4_xyz, l4_points, l4_indices = self.l4([l3_xyz, l3_points])
-        print("l4_points shape: ", l4_points.shape)
+        # print("l4_points shape: ", l4_points.shape)
 
         # Feature Propagation layers
         l3_points = pointnet_fp_module(l3_xyz, l4_xyz, l3_points, l4_points, [256, 256], self.is_training,
