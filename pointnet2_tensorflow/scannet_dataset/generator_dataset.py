@@ -23,9 +23,10 @@ def scene_name_generator(train: str) -> Generator:
             scenes = f.readlines()
     else:
         raise ValueError("train must be 'train', 'val' or 'test'")
-    random.shuffle(scenes)
-    for scene in scenes:
-        yield (scene[:-1])
+    while True:
+        random.shuffle(scenes)
+        for scene in scenes:
+            yield (scene[:-1])
 
 
 def load_from_scene_name(scene_name, pre_files_dir="/home/tim/scannet-pre/") -> List[np.ndarray]:
@@ -53,14 +54,19 @@ def tf_val_generator() -> Generator:
 def get_dataset(train):
     if train == "train":
         gen = tf_train_generator
+        return tf.data.Dataset.from_generator(gen,
+                                              output_types=(tf.float32, tf.int32, tf.int32, tf.float32),
+                                              output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                             tf.TensorShape([None, 3]), tf.TensorShape([None, 3])))
     elif train == "val":
         gen = tf_val_generator
+        return tf.data.Dataset.from_generator(gen,
+                                              output_types=(tf.float32, tf.int32, tf.int32, tf.float32),
+                                              output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                             tf.TensorShape([None, 3]), tf.TensorShape([None, 3])))
     else:
         raise ValueError("use 'train' or 'val' for train")
-    return tf.data.Dataset.from_generator(gen,
-                                          output_types=(tf.float32, tf.int32, tf.int32, tf.float32),
-                                          output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
-                                                         tf.TensorShape([None, 3]), tf.TensorShape([None, 3])))
+
 
 
 if __name__ == '__main__':
