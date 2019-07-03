@@ -199,11 +199,19 @@ def random_rotate(points, labels, colors, normals, sample_weight):
     return rot_points, labels, colors, rot_normals, sample_weight
 
 
-def get_transformed_dataset(train):
+def get_transformed_dataset(train, prefetch=True):
     ds = gd.get_dataset(train)
+    if prefetch:
+        # prefetch loading from disk
+        ds = ds.prefetch(8)
     ds = ds.map(label_map, 4)
-    ds = ds.map(get_subset, 4)
-    ds = ds.map(random_rotate, 4)
+    if train == "train":
+        ds = ds.map(get_subset, 4)
+        ds = ds.map(random_rotate, 4)
+    elif train == "val":
+        ds = ds.map(get_all_subsets_for_scene, 4)
+    else:
+        raise ValueError("train must be either 'train' or 'val'")
     return ds
 
 

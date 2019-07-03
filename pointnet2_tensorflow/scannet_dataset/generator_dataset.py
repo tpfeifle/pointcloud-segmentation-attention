@@ -23,8 +23,10 @@ def scene_name_generator(train: str) -> Generator:
             scenes = f.readlines()
     else:
         raise ValueError("train must be 'train', 'val' or 'test'")
+    # scenes = scenes[:1] # use this for overfit
     while True:
-        random.shuffle(scenes)
+        if train == "train":
+            random.shuffle(scenes)
         for scene in scenes:
             yield (scene[:-1])
 
@@ -66,7 +68,6 @@ def get_dataset(train):
                                                              tf.TensorShape([None, 3]), tf.TensorShape([None, 3])))
     else:
         raise ValueError("use 'train' or 'val' for train")
-
 
 
 if __name__ == '__main__':
