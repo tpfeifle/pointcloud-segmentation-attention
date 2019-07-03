@@ -36,22 +36,47 @@ class InnerAttentionLayer(tf.keras.layers.Layer):
         self.output_dim = output_dim
         self.key_dim = key_dim
 
+        self.num_heads = 4
+
     def build(self, input_shape):
         self.query_net = tf.layers.Dense(self.key_dim, input_shape=(3,))
         self.key_net = tf.layers.Dense(self.key_dim, input_shape=(input_shape[-1],))
         self.value_net = tf.layers.Dense(self.output_dim, input_shape=(input_shape[-1],))
+
+        self.dense = tf.keras.layers.Dense(self.output_dim)
 
     def call(self, input, **kwargs):
         # here the we create a query vector for each point
         Q = self.query_net(input)
         K = self.key_net(input)
         V = self.value_net(input)
+
+        batch_size = tf.shape(Q)[1]
+        group_num = tf.shape(Q)[2]
+        Q = self.split_heads(Q, batch_size, group_num, self.key_dim // self.num_heads)
+        K = self.split_heads(K, batch_size, group_num, self.key_dim // self.num_heads)
+        V = self.split_heads(V, batch_size, group_num, self.output_dim // self.num_heads)
+
         weights = tf.matmul(Q, K, transpose_b=True)
         weights = weights / tf.sqrt(tf.to_float(self.key_dim))
         weights = tf.nn.softmax(weights, dim=-1)
         out = tf.matmul(weights, V)
-        out = tf.squeeze(out, axis=0)
+
+        scaled_attention = tf.transpose(out, perm=[0, 1, 2, 4, 3, 5])
+
+        concat_attention = tf.reshape(scaled_attention, (1, batch_size, group_num, -1, self.output_dim))
+
+        output = self.dense(concat_attention)
+
+        out = tf.squeeze(output, axis=0)
         return out
+
+    def split_heads(self, x, batch_size, group_num, depth):
+        """Split the last dimension into (num_heads, depth).
+        Transpose the result such that the shape is (batch_size, num_heads, seq_len, depth)
+        """
+        x = tf.reshape(x, (1, batch_size, group_num, -1, self.num_heads, depth))
+        return tf.transpose(x, perm=[0, 1, 2, 4, 3, 5])
 
 
 class FeedForwardLayer(tf.keras.layers.Layer):
@@ -113,6 +138,7 @@ class AttentionNetLayer(tf.keras.layers.Layer):
         self.nsample = nsample
         self.is_training = is_training
         self.bn = bn
+        self.inner_dimensions = inner_dimensions
         self.inner_blocks = [InnerAttentionBlock(i, key_dim) for i in inner_dimensions]
 
     def call(self, inputs, **kwargs):
@@ -130,6 +156,7 @@ class AttentionNetLayer(tf.keras.layers.Layer):
         #       f"xyz: {xyz.shape}, points: {points.shape}")
         # Point Feature Embedding
         # print(f"shape of new_points: {new_points.shape}")
+        second_dim = new_points.shape[1]
 
         for inner_block in self.inner_blocks:
             new_points = inner_block([new_points])
@@ -141,7 +168,7 @@ class AttentionNetLayer(tf.keras.layers.Layer):
         # TODO get not only coordinates of point as query vector, but the feature vector new_point:
         # new_points = self.attention_layer([new_points, new_points[:, :, 0, :]])
         new_points = self.attention_layer(
-            [new_points, tf.zeros((tf.shape(new_points)[0], new_points.shape[1], new_points.shape[3]))])
+            [new_points, tf.zeros((tf.shape(new_points)[0], second_dim, self.inner_dimensions[-1]))])
         # print("done end layer")
         # print(f"shape of new_points: {new_points.shape}")
 
