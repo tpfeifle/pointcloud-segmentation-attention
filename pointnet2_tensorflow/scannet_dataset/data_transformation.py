@@ -7,8 +7,11 @@ import scannet_dataset.generator_dataset as gd
 
 
 def label_map(points, labels, colors, normals):
-    map = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 11: 12, 13: 13, 15: 14, 23: 15, 27: 16,
-           32: 17, 33: 18, 35: 19, 38: 20}
+    # TODO this mapping is maybe wrong, review this!
+    # map = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 11: 12, 13: 13, 15: 14, 23: 15, 27: 16,
+    #        32: 17, 33: 18, 35: 19, 38: 20}
+    map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
+           33: 17, 34: 18, 36: 19, 39: 20}
     map = tf.convert_to_tensor([map.get(i, 0) for i in range(41)])
     labels = tf.minimum(labels, 40)
     mapped_labels = tf.gather(map, labels)
@@ -20,7 +23,10 @@ def label_map(points, labels, colors, normals):
 def get_subset(points, labels, colors, normals):
     npoints = 8192
     # label_weights = tf.ones(21)  # TODO verify following weights
-    label_weights = tf.constant([0, 3.8175557, 2.2230785, 2.6964862, 4.546552, 4.9208603, 5.0999, 4.9115996,
+    # label_weights = tf.constant([3.8175557, 2.2230785, 2.6964862, 4.546552, 4.9208603, 5.0999, 4.9115996,
+    #                              5.02148, 4.9090133, 5.4020867, 5.401546, 5.4178405, 5.1401854, 5.332984,
+    #                              4.9614744, 5.259515, 5.439167, 5.3803735, 5.393622, 4.909173, 4.9360685])
+    label_weights = tf.constant([0.0, 2.2230785, 2.6964862, 4.546552, 4.9208603, 5.0999, 4.9115996,
                                  5.02148, 4.9090133, 5.4020867, 5.401546, 5.4178405, 5.1401854, 5.332984,
                                  4.9614744, 5.259515, 5.439167, 5.3803735, 5.393622, 4.909173, 4.9360685])
 
