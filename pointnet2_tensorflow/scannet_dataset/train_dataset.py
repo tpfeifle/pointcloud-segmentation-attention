@@ -2,12 +2,18 @@ import tensorflow as tf
 
 from attention_scannet.attention_models import AttentionNetModel
 from scannet_dataset import data_transformation
+from color_scannet.output_points import output
+import os
+import numpy as np
+import time
+LOG_DIR = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/log/tim/attention_%s' % int(time.time()))
 
 
-def train(epochs=2, batchsize=16):
+def train(epochs=2, batchsize=8):
     tf.Graph().as_default()
     tf.device('/gpu:0')
     sess = tf.Session()
+    train_writer = tf.summary.FileWriter(LOG_DIR, sess.graph)
     # define dataset
     dataset = data_transformation.get_transformed_dataset("train")
     dataset = dataset.batch(batchsize).prefetch(2)
@@ -24,6 +30,8 @@ def train(epochs=2, batchsize=16):
 
     correct = tf.equal(tf.argmax(prediction, 2), tf.to_int64(labels))
     accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(batchsize * 8192)
+    tf.summary.scalar('accuracy', accuracy)
+    tf.summary.scalar('loss', loss)
     optimizer = tf.train.AdamOptimizer(1e-3)
     train_op = optimizer.minimize(loss)
 
@@ -34,9 +42,13 @@ def train(epochs=2, batchsize=16):
     print(f"batches per epoch: {batches_per_epoch}")
     for i in range(int(epochs * batches_per_epoch)):
         epoch = int((i + 1) / batches_per_epoch) + 1
-        _, loss_val, pred_val, acc_val = sess.run([train_op, loss, prediction, accuracy])
+        merged = tf.summary.merge_all()
+        _, loss_val, pred, acc_val, merged, pts = sess.run([train_op, loss, prediction, accuracy, merged, points])
         print(f"\tbatch {(i + 1) % int(batches_per_epoch)}\tloss: {loss_val}, \taccuracy: {acc_val}")
+        train_writer.add_summary(merged, i)
+        pred = np.argmax(pred, axis=2)
         if (i + 1) % int(batches_per_epoch) == 0:
+            # output(points=pts[0], labels=pred[0], index=i)
             print(f"epoch {epoch} finished")
 
 
