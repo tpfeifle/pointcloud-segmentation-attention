@@ -19,7 +19,10 @@ def label_map(points, labels, colors, normals):
 
 def get_subset(points, labels, colors, normals):
     npoints = 8192
-    label_weights = tf.ones(21)  # TODO set weights accordingly
+    # label_weights = tf.ones(21)  # TODO verify following weights
+    label_weights = tf.constant([0, 3.8175557, 2.2230785, 2.6964862, 4.546552, 4.9208603, 5.0999, 4.9115996,
+                                 5.02148, 4.9090133, 5.4020867, 5.401546, 5.4178405, 5.1401854, 5.332984,
+                                 4.9614744, 5.259515, 5.439167, 5.3803735, 5.393622, 4.909173, 4.9360685])
 
     coordmax = tf.reduce_max(points, axis=0)
     coordmin = tf.reduce_min(points, axis=0)
