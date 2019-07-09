@@ -33,8 +33,8 @@ def get_subset(points, labels, colors, normals):
     #                              4.9614744, 5.259515, 5.439167, 5.3803735, 5.393622, 4.909173, 4.9360685])
     # weights according to relative frequency
     label_weights = [0.19046473, 0.19851674, 0.26001881, 1.47028394, 2.20662599, 0.8361011, 2.44105334, 1.68711097,
-               1.31890131, 1.53009846, 2.52134974, 12.23860205, 12.43519999, 3.10312617, 2.75629355, 11.50115691,
-               18.97644886, 19.06070615, 23.11972616, 17.47745665, 1.70481293]
+                     1.31890131, 1.53009846, 2.52134974, 12.23860205, 12.43519999, 3.10312617, 2.75629355, 11.50115691,
+                     18.97644886, 19.06070615, 23.11972616, 17.47745665, 1.70481293]
 
     coordmax = tf.reduce_max(points, axis=0)
     coordmin = tf.reduce_min(points, axis=0)
@@ -203,6 +203,53 @@ def get_all_subsets_for_scene(points, labels, colors, normals):
                                     tf.TensorShape([None, npoints, 3])])
 
     return points_stack, labels_stack, colors_stack, normals_stack, tf.ones_like(labels_stack)
+
+
+def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
+    npoints = 8192
+    label_weights = np.ones(21)
+    label_weights[0] = 0
+
+    coordmax = np.max(points, axis=0)
+    coordmin = np.min(points, axis=0)
+    nsubvolume_x = np.ceil((coordmax[0] - coordmin[0]) / 1.5).astype(np.int32)
+    nsubvolume_y = np.ceil((coordmax[1] - coordmin[1]) / 1.5).astype(np.int32)
+    point_sets = []
+    semantic_segs = []
+    sample_weights = []
+    colors_sets = []
+    normals_sets = []
+    for i in range(nsubvolume_x):
+        for j in range(nsubvolume_y):
+            curmin = coordmin + [i * 1.5, j * 1.5, 0]
+            curmax = coordmin + [(i + 1) * 1.5, (j + 1) * 1.5, coordmax[2] - coordmin[2]]
+            curchoice = np.sum((points >= (curmin - 0.2)) * (points <= (curmax + 0.2)), axis=1) == 3
+            cur_point_set = points[curchoice, :]
+            cur_semantic_seg = labels[curchoice]
+            if len(cur_semantic_seg) == 0:
+                continue
+            mask = np.sum((cur_point_set >= (curmin - 0.001)) * (cur_point_set <= (curmax + 0.001)), axis=1) == 3
+            choice = np.random.choice(len(cur_semantic_seg), npoints, replace=True)
+            point_set = cur_point_set[choice]  # Nx3
+            normal_cur = normals[choice]
+            color_cur = colors[choice]
+            semantic_seg = cur_semantic_seg[choice]  # N
+            mask = mask[choice]
+            if sum(mask) / float(len(mask)) < 0.01:
+                continue
+            sample_weight = label_weights[semantic_seg]
+            sample_weight *= mask  # N
+            point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
+            semantic_segs.append(np.expand_dims(semantic_seg, 0))  # 1xN
+            sample_weights.append(np.expand_dims(sample_weight, 0))  # 1xN
+            colors_sets.append(np.expand_dims(color_cur, 0))
+            normals_sets.append(np.expand_dims(normal_cur, 0))
+    point_sets = np.concatenate(tuple(point_sets), axis=0)
+    semantic_segs = np.concatenate(tuple(semantic_segs), axis=0)
+    sample_weights = np.concatenate(tuple(sample_weights), axis=0)
+    colors_sets = np.concatenate(tuple(colors_sets), axis=0)
+    normals_sets = np.concatenate(tuple(normals_sets), axis=0)
+    return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights
 
 
 def random_rotate(points, labels, colors, normals, sample_weight):

@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
-from scannet_dataset import data_transformation
+from scannet_dataset import generator_dataset, data_transformation
 
 
 def _float_feature(value):
@@ -44,20 +44,60 @@ def precompute_train_data(epochs, elements_per_epoch, out_dir, dataset, add_epoc
                 raise ValueError("the file already exists")
 
 
-def precomputed_data_generator(dir="/home/tim/data/train_precomputed"):
+def precompute_val_data(elements, out_dir,
+                        dataset=generator_dataset.get_dataset("val").prefetch(4).map(data_transformation.label_map)):
+    sess = tf.Session()
+    data_iterator = tf.data.Iterator.from_structure(dataset.output_types, dataset.output_shapes)
+    val_data_init = data_iterator.make_initializer(dataset)
+    sess.run(val_data_init)
+    scene = data_iterator.get_next()
+    for i in range(elements):
+        scene_val = sess.run([scene])[0]
+        points_val, labels_val, colors_val, normals_val = scene_val
+        subscenes = data_transformation.get_all_subsets_for_scene_numpy(points_val, labels_val, colors_val, normals_val)
+        for j in range(len(subscenes[0])):
+            points_val, labels_val, colors_val, normals_val, sample_weight_val = (x[j] for x in subscenes)
+            filename = f"{out_dir}/{i:03d}-{j:04d}.pickle"
+            if not os.path.isfile(filename):
+                with open(filename, "wb")as file:
+                    pickle.dump((points_val, labels_val, colors_val, normals_val, sample_weight_val), file)
+            else:
+                raise ValueError("the file already exists")
+
+
+def precomputed_train_data_generator(dir="/home/tim/data/train_precomputed"):
     file_list = sorted(os.listdir(dir))
     while True:
         for filename in file_list:
             if filename.endswith(".pickle"):
                 file = (os.path.join(dir, filename))
-                print(file)
                 with open(file, "rb") as file:
                     points_val, labels_val, colors_val, normals_val, sample_weight_val = pickle.load(file)
                     yield points_val, labels_val, colors_val, normals_val, sample_weight_val
 
 
-def get_precomputed_data_set():
-    gen = precomputed_data_generator
+def get_precomputed_train_data_set():
+    gen = precomputed_train_data_generator
+    return tf.data.Dataset.from_generator(gen,
+                                          output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
+                                          output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                         tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
+                                                         tf.TensorShape([None])))
+
+
+def precomputed_val_data_generator(dir="/home/tim/data/val_precomputed"):
+    file_list = sorted(os.listdir(dir))
+    while True:
+        for filename in file_list:
+            if filename.endswith(".pickle"):
+                file = (os.path.join(dir, filename))
+                with open(file, "rb") as file:
+                    points_val, labels_val, colors_val, normals_val, sample_weight_val = pickle.load(file)
+                    yield points_val, labels_val, colors_val, normals_val, sample_weight_val
+
+
+def get_precomputed_val_data_set():
+    gen = precomputed_val_data_generator
     return tf.data.Dataset.from_generator(gen,
                                           output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
                                           output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
@@ -66,14 +106,16 @@ def get_precomputed_data_set():
 
 
 def main():
-    # ds = data_transformation.get_transformed_dataset("train").prefetch(4)
-    # precompute_train_data(60, 1201, "/home/tim/data/train_precomputed", ds, 40)
-    new_ds = get_precomputed_data_set()
+    new_ds = get_precomputed_train_data_set()
     new_ds = new_ds.batch(16).prefetch(2)
     batch = new_ds.make_one_shot_iterator().get_next()
     sess = tf.Session()
     first_batch = sess.run(batch)
     print(first_batch)
+    # precompute_val_data(312, "/home/tim/data/val_precomputed")
+    # ds = data_transformation.get_transformed_dataset("train").prefetch(4)
+    # precompute_train_data(60, 1201, "/home/tim/data/train_precomputed", ds, 40)
+
 
 if __name__ == '__main__':
     main()
