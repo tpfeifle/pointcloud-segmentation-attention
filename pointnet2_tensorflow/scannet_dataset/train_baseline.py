@@ -139,10 +139,13 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     # val_iou_summary = tf.summary.scalar('iou', val_iou)
     # val_summaries = tf.summary.merge([val_acc_summary, val_iou_summary])
 
+    saver = tf.train.Saver()
+
     batches_per_epoch = N_TRAIN_SAMPLES / batch_size
     print(f"batches per epoch: {batches_per_epoch}")
     # print(tf.trainable_variables())
     acc_sum, loss_sum = 0, 0
+    best_iou = 0
 
     # train loop
     for i in range(int(epochs * batches_per_epoch)):
@@ -165,6 +168,7 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
             # end of epoch
             print(f"epoch {epoch} finished")
             # epoch summary
+            lr, bn_d = sess.run([learning_rate, bn_decay])
             epoch_loss = loss_sum / batches_per_epoch
             epoch_acc = acc_sum / batches_per_epoch
             epoch_iou = train_iou_val
@@ -173,6 +177,8 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
             summary.value.add(tag="loss", simple_value=epoch_loss)
             summary.value.add(tag="accuracy", simple_value=epoch_acc)
             summary.value.add(tag="iou", simple_value=epoch_iou)
+            summary.value.add(tag="learning_rate", simple_value=lr)
+            summary.value.add(tag="bn_decay", simple_value=bn_d)
             train_writer.add_summary(summary, epoch)
             # reset accumulators
             acc_sum, loss_sum = 0, 0
@@ -201,6 +207,13 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
                 val_writer.add_summary(summary, epoch)
                 print(f"evaluation:\tmean loss: {epoch_loss:.4f}\tmean acc: {epoch_acc:.4f}"
                       f"\tmean iou {epoch_iou:.4f}\n")
+
+                # save model if it is better
+                if epoch_iou > best_iou:
+                    best_iou = epoch_iou
+                    save_path = saver.save(sess, os.path.join(LOG_DIR + "_train", f"best_model_epoch_{epoch:03d}.ckpt"))
+                    print(f"Model saved in file: {save_path}\n")
+
                 # reset accumulators
                 acc_sum, loss_sum = 0, 0
                 sess.run(val_iou_reset)
@@ -208,6 +221,7 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
                 assign_op = is_training_pl.assign(True)
                 sess.run(assign_op)
             print(f"starting epoch {epoch + 1}")
+
 
 if __name__ == '__main__':
     train()
