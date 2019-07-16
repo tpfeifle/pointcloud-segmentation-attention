@@ -106,12 +106,19 @@ def get_precomputed_val_data_set():
 
 
 def main():
-    new_ds = get_precomputed_train_data_set()
-    new_ds = new_ds.batch(16).prefetch(2)
-    batch = new_ds.make_one_shot_iterator().get_next()
     sess = tf.Session()
+    val_ds = get_precomputed_val_data_set()
+    batch = val_ds.make_one_shot_iterator().get_next()
     first_batch = sess.run(batch)
-    print(first_batch)
+    print("val batch", first_batch)
+    for i in first_batch:
+        print(i.shape)
+
+    train_ds = get_precomputed_train_data_set()
+    train_ds = train_ds.batch(16).prefetch(2)
+    batch = train_ds.make_one_shot_iterator().get_next()
+    first_batch = sess.run(batch)
+    print("train batch", first_batch)
     # precompute_val_data(312, "/home/tim/data/val_precomputed")
     # ds = data_transformation.get_transformed_dataset("train").prefetch(4)
     # precompute_train_data(60, 1201, "/home/tim/data/train_precomputed", ds, 40)

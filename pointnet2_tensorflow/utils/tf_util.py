@@ -84,7 +84,7 @@ def conv1d(inputs,
   Returns:
     Variable tensor
   """
-  with tf.variable_scope(scope) as sc:
+  with tf.variable_scope(scope, reuse=tf.AUTO_REUSE) as sc:
     assert(data_format=='NHWC' or data_format=='NCHW')
     if data_format == 'NHWC':
       num_in_channels = inputs.get_shape()[-1].value
@@ -152,7 +152,7 @@ def conv2d(inputs,
   Returns:
     Variable tensor
   """
-  with tf.variable_scope(scope) as sc:
+  with tf.variable_scope(scope, reuse=tf.AUTO_REUSE) as sc:
       kernel_h, kernel_w = kernel_size
       assert(data_format=='NHWC' or data_format=='NCHW')
       if data_format == 'NHWC':

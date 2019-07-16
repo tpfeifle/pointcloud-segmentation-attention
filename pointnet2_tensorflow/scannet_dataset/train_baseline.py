@@ -1,45 +1,63 @@
-import tensorflow as tf
-
-from attention_scannet.attention_models import AttentionNetModel
-from scannet_dataset import precompute_dataset
-import importlib
 import os
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
+
+import models.pointnet2_sem_seg as model
+from scannet_dataset import precompute_dataset
+
 N_POINTS = 8192
 N_TRAIN_SAMPLES = 1201
-N_VAL_SAMPLES = 312
-BATCH_SIZE = 20
-MODEL = importlib.import_module("models.pointnet2_sem_seg")
+N_VAL_SAMPLES = 4542
+BATCH_SIZE = 16
 LOG_DIR = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/log/baseline/%s' % int(time.time()))
+
+class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
+                             4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025,
+                             4.809412839311939, 5.052097251455304, 5.389129668645318, 5.390614085649042,
+                             5.127458225110977, 5.086056870814752, 5.3831185190895265, 5.422684124268539,
+                             5.422955391988761, 5.433705358072363, 5.417426773812747, 4.870172044153657])
 
 
 def get_learning_rate(batch):
     learning_rate = tf.train.exponential_decay(
         1e-3,  # Base learning rate.
         tf.multiply(batch, BATCH_SIZE),  # Current index into the dataset. batch * BATCH_SIZE
-        200000,  # Decay step.
-        0.7,  # Decay rate.
+        N_TRAIN_SAMPLES * 45,  # decay step original was 2000000, now it's after 45 epochs
+        0.7,  # decay rate
         staircase=True)
     learning_rate = tf.maximum(learning_rate, 0.00001)  # CLIP THE LEARNING RATE!
     return learning_rate
+
 
 def get_bn_decay(batch):
     bn_momentum = tf.train.exponential_decay(
         0.5,
         tf.multiply(batch, BATCH_SIZE),
-        200000.0,
+        N_TRAIN_SAMPLES * 45,  # decay step original was 2000000, now it's after 45 epochs
         0.5,
         staircase=True)
     bn_decay = tf.minimum(0.99, 1 - bn_momentum)
     return bn_decay
+
+
+def show_prediction_historgram(prediction):
+    # visualize for debugging
+    max_pred = np.argmax(prediction, axis=2)
+    all_batches_pred = np.reshape(max_pred, -1)
+    plt.hist(all_batches_pred, bins=21)
+    plt.show()
+
 
 def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     tf.Graph().as_default()
     tf.device('/gpu:0')
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
     sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-    # define train
+
+    # define train data
     train_data = precompute_dataset.get_precomputed_train_data_set()
     train_data = train_data.batch(batch_size).prefetch(4)
     train_iterator = tf.data.Iterator.from_structure(train_data.output_types, train_data.output_shapes)
@@ -49,7 +67,10 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     train_features = tf.concat([tf.cast(colors, tf.float32), train_normals], 2)
     train_coordinates = points
     train_labels = labels
-    train_sample_weight = sample_weight
+    # train_sample_weight = sample_weight
+    train_mask = tf.not_equal(sample_weight, 0.0)
+    train_mask = tf.cast(train_mask, tf.float32)
+    train_sample_weight = tf.multiply(tf.gather(class_weights, train_labels), train_mask)
 
     # define validation data
     val_data = precompute_dataset.get_precomputed_val_data_set()
@@ -61,103 +82,132 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     val_features = tf.concat([tf.cast(colors, tf.float32), normals], 0)
     val_coordinates = points
     val_labels = labels
-    val_sample_weight = sample_weight
-
-    train_writer = tf.summary.FileWriter(LOG_DIR, sess.graph)
-
-
-
+    # val_sample_weight = sample_weight
+    val_sample_weight = tf.gather(class_weights, val_labels)
 
     # define model and metrics
-    # is_training_pl = tf.constant(True, tf.bool, shape=(), name="is_training")
     is_training_pl = tf.Variable(True)
     step = tf.Variable(0, trainable=False)
-    # model = AttentionNetModel(is_training=is_training_pl, bn_decay=None, num_class=21)
+    bn_decay = get_bn_decay(step)
+    learning_rate = get_learning_rate(step)
 
-    # train_pred = model(train_coordinates)
-    train_pred, _ = MODEL.get_model(train_coordinates, is_training_pl, 21, bn_decay=get_bn_decay(step))
-    train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred, weights=train_sample_weight)
+    # train metrics
+    train_pred, _ = model.get_model(train_coordinates, is_training_pl, 21, bn_decay=bn_decay)
+    train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred,
+                                                        weights=train_sample_weight)
 
     correct_train_pred = tf.equal(tf.argmax(train_pred, 2, output_type=tf.int32), train_labels)
 
-    train_iou, conf_mat = tf.metrics.mean_iou(train_labels, tf.argmax(train_pred, 2, output_type=tf.int32), num_classes=21)
+    train_iou, train_iou_update = tf.metrics.mean_iou(train_labels, tf.argmax(train_pred, 2, output_type=tf.int32),
+                                                      num_classes=21, name="train_iou")
+    running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="train_iou")
+    train_iou_reset = tf.variables_initializer(var_list=running_vars)
     train_acc = tf.reduce_sum(tf.cast(correct_train_pred, tf.float32)) / float(batch_size * N_POINTS)
-    bn_decay = get_learning_rate(step)
-    optimizer = tf.train.AdamOptimizer(bn_decay)
+    optimizer = tf.train.AdamOptimizer(learning_rate)
     train_op = optimizer.minimize(train_loss, global_step=step)
-    # val_pred = model(val_coordinates)
-    '''val_loss = tf.losses.sparse_softmax_cross_entropy(labels=val_labels, logits=val_pred,
+
+    # validation metrics
+    val_pred, _ = model.get_model(val_coordinates, is_training_pl, 21)
+    val_loss = tf.losses.sparse_softmax_cross_entropy(labels=val_labels, logits=val_pred,
                                                       weights=val_sample_weight)
     correct_val_pred = tf.equal(tf.argmax(val_pred, 2, output_type=tf.int32), val_labels)
-    val_acc = tf.reduce_sum(tf.cast(correct_val_pred, tf.float32)) / \
-              tf.cast(tf.shape(labels)[0] * N_POINTS, dtype=tf.float32)'''
+    val_acc = tf.reduce_sum(tf.cast(correct_val_pred, tf.float32)) / float(batch_size * N_POINTS)
+    val_iou, val_iou_update = tf.metrics.mean_iou(train_labels, tf.argmax(train_pred, 2, output_type=tf.int32),
+                                                  num_classes=21, name="val_iou")
+    running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="val_iou")
+    val_iou_reset = tf.variables_initializer(var_list=running_vars)
 
-
-
-
-
+    # initialize variables
     variable_init = tf.global_variables_initializer()
     sess.run(variable_init)
     sess.run(tf.local_variables_initializer())
-
-    tf.summary.scalar('accuracy', train_acc)
-    tf.summary.scalar('loss', train_loss)
-    tf.summary.scalar('iou', train_iou)
-    tf.summary.scalar('bn_decay', bn_decay)
-    batches_per_epoch = N_TRAIN_SAMPLES / batch_size
-    # batches_per_epoch = 2
-    print(f"batches per epoch: {batches_per_epoch}")
     assign_op = is_training_pl.assign(True)
     sess.run(assign_op)
-    print(tf.trainable_variables())
+
+    # add summaries
+    train_writer = tf.summary.FileWriter(LOG_DIR + "_train", sess.graph)
+    # tf.summary.scalar('accuracy', train_acc)
+    # tf.summary.scalar('loss', train_loss)
+    # tf.summary.scalar('iou', train_iou)
+    # tf.summary.scalar('bn_decay', bn_decay)
+    # tf.summary.scalar('learning_rate', learning_rate)
+    # tf.summary.scalar('step', step)
+    # train_summaries = tf.summary.merge_all()
+
+    val_writer = tf.summary.FileWriter(LOG_DIR + "_val")
+    # val_acc_summary = tf.summary.scalar('accuracy', val_acc)
+    # val_iou_summary = tf.summary.scalar('iou', val_iou)
+    # val_summaries = tf.summary.merge([val_acc_summary, val_iou_summary])
+
+    batches_per_epoch = N_TRAIN_SAMPLES / batch_size
+    print(f"batches per epoch: {batches_per_epoch}")
+    # print(tf.trainable_variables())
     acc_sum, loss_sum = 0, 0
+
+    # train loop
     for i in range(int(epochs * batches_per_epoch)):
-        # step.assign(i)
+        step.assign(i)
 
         epoch = int((i + 1) / batches_per_epoch) + 1
-        merged = tf.summary.merge_all()
 
-        # _, loss_val, acc_val, pred, batch_data, iou, asdf, merged = sess.run([train_op, train_loss, train_acc, train_pred, points, train_iou, conf_mat, merged])
-        # extract labels and predictions
-        _, loss_val, acc_train, pred_train, labels_val, merged_val = sess.run([train_op, train_loss, train_acc, train_pred, train_labels, merged])
-
-        if i % 50 == 0:
-            # visualize for debugging
-            import numpy as np
-            import matplotlib.pyplot as plt
-            max_pred = np.argmax(pred_train, axis=2)
-            all_batches_pred = np.reshape(max_pred, -1)
-            plt.hist(all_batches_pred, bins=21)
-            plt.show()
-            # END visualize
-
+        _, loss_val, acc_train, pred_train, labels_val, _, train_iou_val = sess.run(
+            [train_op, train_loss, train_acc, train_pred, train_labels, train_iou_update, train_iou])
 
         acc_sum += acc_train
         loss_sum += loss_val
-        print(f"\tbatch {(i + 1) % int(batches_per_epoch)}\tloss: {loss_val}, \taccuracy: {acc_train}")
-        train_writer.add_summary(merged_val, i)
-        if (i + 1) % int(batches_per_epoch) == 0:
+        print(f"\tepoch: {epoch:03d}\tbatch {i % int(batches_per_epoch) + 1:03d}"
+              f"\tloss: {loss_val:.4f}, \taccuracy: {acc_train:.4f}\taccumulated iou: {train_iou_val:.4f}")
 
+        if i % 50 == 0 and False:
+            show_prediction_historgram(pred_train)
+
+        if (i + 1) % int(batches_per_epoch) == 0:
+            # end of epoch
             print(f"epoch {epoch} finished")
             # epoch summary
-            print(f"mean acc: {acc_sum / batches_per_epoch} \tmean loss: {loss_sum / batches_per_epoch}")
-
+            epoch_loss = loss_sum / batches_per_epoch
+            epoch_acc = acc_sum / batches_per_epoch
+            epoch_iou = train_iou_val
+            print(f"mean loss: {epoch_loss:.4f}\tmean acc: {epoch_acc:.4f}\tmean iou: {epoch_iou:.4f}")
+            summary = tf.Summary()
+            summary.value.add(tag="loss", simple_value=epoch_loss)
+            summary.value.add(tag="accuracy", simple_value=epoch_acc)
+            summary.value.add(tag="iou", simple_value=epoch_iou)
+            train_writer.add_summary(summary, epoch)
+            # reset accumulators
             acc_sum, loss_sum = 0, 0
-            '''
-            if epoch % n_epochs_to_val == 0 and False:
+            sess.run(train_iou_reset)
+
+            if epoch % n_epochs_to_val == 0:
+                # pass over validation set
                 assign_op = is_training_pl.assign(False)
                 sess.run(assign_op)
-                print("starting evaluation")
-                for j in range(N_VAL_SAMPLES):
-                    loss_val, acc_val = sess.run([val_loss, val_acc])
-                    print(f"\tscene {j} eval: \tloss: {loss_val}, \taccuracy: {acc_val}")
+                val_batches = N_VAL_SAMPLES // BATCH_SIZE
+                print(f"starting evaluation {val_batches} batches")
+                for j in range(val_batches):
+                    loss_val, acc_val, _, val_iou_val = sess.run([val_loss, val_acc, val_iou_update, val_iou])
+                    print(f"\tevaluation epoch: {epoch:03d}\tbatch {j:03d} eval:"
+                          f"\tloss: {loss_val:.4f}\taccuracy: {acc_val:.4f}\taccumulated iou {val_iou_val:.4f}")
                     acc_sum += acc_val
                     loss_sum += loss_val
-                print(f"eval: mean acc: {acc_sum / N_VAL_SAMPLES} \tmean loss: {loss_sum / N_VAL_SAMPLES}")
+                # validation summary
+                epoch_loss = loss_sum / val_batches
+                epoch_acc = acc_sum / val_batches
+                epoch_iou = val_iou_val
+                summary = tf.Summary()
+                summary.value.add(tag="loss", simple_value=epoch_loss)
+                summary.value.add(tag="accuracy", simple_value=epoch_acc)
+                summary.value.add(tag="iou", simple_value=epoch_iou)
+                val_writer.add_summary(summary, epoch)
+                print(f"evaluation:\tmean loss: {epoch_loss:.4f}\tmean acc: {epoch_acc:.4f}"
+                      f"\tmean iou {epoch_iou:.4f}\n")
+                # reset accumulators
                 acc_sum, loss_sum = 0, 0
-                assign_op = is_training_pl.assign(True)
-                sess.run(assign_op)'''
+                sess.run(val_iou_reset)
 
+                assign_op = is_training_pl.assign(True)
+                sess.run(assign_op)
+            print(f"starting epoch {epoch + 1}")
 
 if __name__ == '__main__':
     train()
