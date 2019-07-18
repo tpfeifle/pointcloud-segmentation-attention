@@ -12,7 +12,7 @@ N_POINTS = 8192
 N_TRAIN_SAMPLES = 1201
 N_VAL_SAMPLES = 4542
 BATCH_SIZE = 16
-LOG_DIR = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/log/baseline/%s' % int(time.time()))
+LOG_DIR = os.path.join('/home/tim/training_log/baseline/long_run%s' % int(time.time()))
 
 class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
                              4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025,
@@ -25,7 +25,7 @@ def get_learning_rate(batch):
     learning_rate = tf.train.exponential_decay(
         1e-3,  # Base learning rate.
         tf.multiply(batch, BATCH_SIZE),  # Current index into the dataset. batch * BATCH_SIZE
-        N_TRAIN_SAMPLES * 45,  # decay step original was 2000000, now it's after 45 epochs
+        N_TRAIN_SAMPLES * 80,  # decay step original was 2000000, now it's after 45 epochs
         0.7,  # decay rate
         staircase=True)
     learning_rate = tf.maximum(learning_rate, 0.00001)  # CLIP THE LEARNING RATE!
@@ -36,7 +36,7 @@ def get_bn_decay(batch):
     bn_momentum = tf.train.exponential_decay(
         0.5,
         tf.multiply(batch, BATCH_SIZE),
-        N_TRAIN_SAMPLES * 45,  # decay step original was 2000000, now it's after 45 epochs
+        N_TRAIN_SAMPLES * 80,  # decay step original was 2000000, now it's after 45 epochs
         0.5,
         staircase=True)
     bn_decay = tf.minimum(0.99, 1 - bn_momentum)
@@ -112,7 +112,7 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
                                                       weights=val_sample_weight)
     correct_val_pred = tf.equal(tf.argmax(val_pred, 2, output_type=tf.int32), val_labels)
     val_acc = tf.reduce_sum(tf.cast(correct_val_pred, tf.float32)) / float(batch_size * N_POINTS)
-    val_iou, val_iou_update = tf.metrics.mean_iou(train_labels, tf.argmax(train_pred, 2, output_type=tf.int32),
+    val_iou, val_iou_update = tf.metrics.mean_iou(val_labels, tf.argmax(val_pred, 2, output_type=tf.int32),
                                                   num_classes=21, name="val_iou")
     running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="val_iou")
     val_iou_reset = tf.variables_initializer(var_list=running_vars)
