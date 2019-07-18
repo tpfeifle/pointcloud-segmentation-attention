@@ -97,19 +97,22 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
                                                         weights=train_sample_weight)
 
     # Filter out the unassigned labels
-    zeros = tf.cast(tf.zeros_like(train_labels), dtype=tf.bool)
-    ones = tf.cast(tf.ones_like(train_labels), dtype=tf.bool)
-    loc = tf.where(train_labels > 0, ones, zeros)
-    train_labels_assigned = tf.boolean_mask(train_labels, loc)
-    train_pred_assigned = tf.boolean_mask(train_pred, loc)
+    train_labels_flat = tf.reshape(train_labels, [-1])
+    train_pred_flat = tf.reshape(train_pred, [-1, train_pred.shape[2]])
 
-    correct_train_pred = tf.equal(tf.argmax(train_pred_assigned, 2, output_type=tf.int32), train_labels_assigned)
+    loc = tf.reshape(tf.where(train_labels_flat > 0), [-1])
+    train_labels_assigned = tf.gather(train_labels_flat, loc, axis=0)
+    train_pred_assigned = tf.gather(train_pred_flat, loc)
+    correct_train_pred = tf.equal(tf.argmax(train_pred_assigned, 1, output_type=tf.int32), train_labels_assigned)
 
-    train_iou, train_iou_update = tf.metrics.mean_iou(train_labels_assigned, tf.argmax(train_pred_assigned, 2, output_type=tf.int32),
+    train_iou, train_iou_update = tf.metrics.mean_iou(train_labels_assigned,
+                                                      tf.argmax(train_pred_assigned, 1, output_type=tf.int32),
                                                       num_classes=21, name="train_iou")
     running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="train_iou")
     train_iou_reset = tf.variables_initializer(var_list=running_vars)
-    train_acc = tf.reduce_sum(tf.cast(correct_train_pred, tf.float32)) / float(batch_size * len(train_labels_assigned))
+    train_acc = tf.reduce_sum(tf.cast(correct_train_pred, tf.float32)) / \
+                tf.cast(tf.shape(train_labels_assigned)[0], tf.float32)
+
     optimizer = tf.train.AdamOptimizer(learning_rate)
     train_op = optimizer.minimize(train_loss, global_step=step)
 
@@ -119,16 +122,18 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
                                                       weights=val_sample_weight)
 
     # Filter out the unassigned labels
-    zeros = tf.cast(tf.zeros_like(val_labels), dtype=tf.bool)
-    ones = tf.cast(tf.ones_like(val_labels), dtype=tf.bool)
-    loc = tf.where(val_labels > 0, ones, zeros)
-    val_labels_assigned = tf.boolean_mask(val_labels, loc)
-    val_pred_assigned = tf.boolean_mask(train_pred, loc)
+    val_labels_flat = tf.reshape(val_labels, [-1])
+    val_pred_flat = tf.reshape(val_pred, [-1, val_pred.shape[2]])
 
-    correct_val_pred = tf.equal(tf.argmax(val_pred_assigned, 2, output_type=tf.int32), val_labels_assigned)
+    loc = tf.reshape(tf.where(val_labels_flat > 0), [-1])
+    val_labels_assigned = tf.gather(val_labels_flat, loc)
+    val_pred_assigned = tf.gather(val_pred_flat, loc)
+    correct_val_pred = tf.equal(tf.argmax(val_pred_assigned, 1, output_type=tf.int32), val_labels_assigned)
 
-    val_acc = tf.reduce_sum(tf.cast(correct_val_pred, tf.float32)) / float(batch_size * len(val_labels_assigned))
-    val_iou, val_iou_update = tf.metrics.mean_iou(val_labels_assigned, tf.argmax(val_pred_assigned, 2, output_type=tf.int32),
+    val_acc = tf.reduce_sum(tf.cast(correct_val_pred, tf.float32)) / \
+              tf.cast(tf.shape(val_labels_assigned)[0], tf.float32)
+    val_iou, val_iou_update = tf.metrics.mean_iou(val_labels_assigned,
+                                                  tf.argmax(val_pred_assigned, 1, output_type=tf.int32),
                                                   num_classes=21, name="val_iou")
     running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="val_iou")
     val_iou_reset = tf.variables_initializer(var_list=running_vars)
