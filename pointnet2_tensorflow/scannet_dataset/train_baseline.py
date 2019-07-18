@@ -96,13 +96,20 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred,
                                                         weights=train_sample_weight)
 
-    correct_train_pred = tf.equal(tf.argmax(train_pred, 2, output_type=tf.int32), train_labels)
+    # Filter out the unassigned labels
+    zeros = tf.cast(tf.zeros_like(train_labels), dtype=tf.bool)
+    ones = tf.cast(tf.ones_like(train_labels), dtype=tf.bool)
+    loc = tf.where(train_labels > 0, ones, zeros)
+    train_labels_assigned = tf.boolean_mask(train_labels, loc)
+    train_pred_assigned = tf.boolean_mask(train_pred, loc)
 
-    train_iou, train_iou_update = tf.metrics.mean_iou(train_labels, tf.argmax(train_pred, 2, output_type=tf.int32),
+    correct_train_pred = tf.equal(tf.argmax(train_pred_assigned, 2, output_type=tf.int32), train_labels_assigned)
+
+    train_iou, train_iou_update = tf.metrics.mean_iou(train_labels_assigned, tf.argmax(train_pred_assigned, 2, output_type=tf.int32),
                                                       num_classes=21, name="train_iou")
     running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="train_iou")
     train_iou_reset = tf.variables_initializer(var_list=running_vars)
-    train_acc = tf.reduce_sum(tf.cast(correct_train_pred, tf.float32)) / float(batch_size * N_POINTS)
+    train_acc = tf.reduce_sum(tf.cast(correct_train_pred, tf.float32)) / float(batch_size * len(train_labels_assigned))
     optimizer = tf.train.AdamOptimizer(learning_rate)
     train_op = optimizer.minimize(train_loss, global_step=step)
 
@@ -110,9 +117,18 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     val_pred, _ = model.get_model(val_coordinates, is_training_pl, 21)
     val_loss = tf.losses.sparse_softmax_cross_entropy(labels=val_labels, logits=val_pred,
                                                       weights=val_sample_weight)
-    correct_val_pred = tf.equal(tf.argmax(val_pred, 2, output_type=tf.int32), val_labels)
-    val_acc = tf.reduce_sum(tf.cast(correct_val_pred, tf.float32)) / float(batch_size * N_POINTS)
-    val_iou, val_iou_update = tf.metrics.mean_iou(val_labels, tf.argmax(val_pred, 2, output_type=tf.int32),
+
+    # Filter out the unassigned labels
+    zeros = tf.cast(tf.zeros_like(val_labels), dtype=tf.bool)
+    ones = tf.cast(tf.ones_like(val_labels), dtype=tf.bool)
+    loc = tf.where(val_labels > 0, ones, zeros)
+    val_labels_assigned = tf.boolean_mask(val_labels, loc)
+    val_pred_assigned = tf.boolean_mask(train_pred, loc)
+
+    correct_val_pred = tf.equal(tf.argmax(val_pred_assigned, 2, output_type=tf.int32), val_labels_assigned)
+
+    val_acc = tf.reduce_sum(tf.cast(correct_val_pred, tf.float32)) / float(batch_size * len(val_labels_assigned))
+    val_iou, val_iou_update = tf.metrics.mean_iou(val_labels_assigned, tf.argmax(val_pred_assigned, 2, output_type=tf.int32),
                                                   num_classes=21, name="val_iou")
     running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="val_iou")
     val_iou_reset = tf.variables_initializer(var_list=running_vars)
