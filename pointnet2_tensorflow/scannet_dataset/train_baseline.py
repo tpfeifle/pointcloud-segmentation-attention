@@ -25,7 +25,7 @@ def get_learning_rate(batch):
     learning_rate = tf.train.exponential_decay(
         1e-3,  # Base learning rate.
         tf.multiply(batch, BATCH_SIZE),  # Current index into the dataset. batch * BATCH_SIZE
-        N_TRAIN_SAMPLES * 45,  # decay step original was 2000000, now it's after 45 epochs
+        N_TRAIN_SAMPLES * 80,  # decay step original was 2000000, now it's after 45 epochs
         0.7,  # decay rate
         staircase=True)
     learning_rate = tf.maximum(learning_rate, 0.00001)  # CLIP THE LEARNING RATE!
@@ -36,7 +36,7 @@ def get_bn_decay(batch):
     bn_momentum = tf.train.exponential_decay(
         0.5,
         tf.multiply(batch, BATCH_SIZE),
-        N_TRAIN_SAMPLES * 45,  # decay step original was 2000000, now it's after 45 epochs
+        N_TRAIN_SAMPLES * 80,  # decay step original was 2000000, now it's after 45 epochs
         0.5,
         staircase=True)
     bn_decay = tf.minimum(0.99, 1 - bn_momentum)
@@ -93,7 +93,7 @@ def train(epochs=1000, batch_size=BATCH_SIZE, n_epochs_to_val=4):
 
     # train metrics
     train_pred, _ = model.get_model(train_coordinates, is_training_pl, 21, bn_decay=bn_decay)
-    train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred, # TODO: question: do we want to minimize with or without the unassigned points?
+    train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred,
                                                         weights=train_sample_weight)
 
     # Filter out the unassigned labels
