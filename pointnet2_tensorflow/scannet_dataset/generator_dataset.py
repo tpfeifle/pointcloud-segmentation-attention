@@ -48,7 +48,7 @@ def tf_train_generator() -> Generator:
 
 
 def tf_val_generator() -> Generator:
-    for scene_name in scene_name_generator("train"):
+    for scene_name in scene_name_generator("val"):
         points, labels, colors, normals = load_from_scene_name(scene_name)
         yield (points, labels, colors, normals)
 
