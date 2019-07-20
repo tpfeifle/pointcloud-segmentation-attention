@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-import models.pointnet2_sem_seg as model
+import models.pointnet2_sem_seg_attention as model
 from scannet_dataset import precompute_dataset
 
 N_POINTS = 8192
 N_TRAIN_SAMPLES = 1201
 N_VAL_SAMPLES = 4542
 BATCH_SIZE = 16
-LOG_DIR = os.path.join('/home/tim/training_log/baseline/long_run%s' % int(time.time()))
+LOG_DIR = os.path.join('/home/tim/training_log/baseline/first_try_with_attention_%s' % int(time.time()))
 
 class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
                              4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025,
