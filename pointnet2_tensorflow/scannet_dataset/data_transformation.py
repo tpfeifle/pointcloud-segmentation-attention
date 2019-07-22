@@ -226,13 +226,15 @@ def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
             curchoice = np.sum((points >= (curmin - 0.2)) * (points <= (curmax + 0.2)), axis=1) == 3
             cur_point_set = points[curchoice, :]
             cur_semantic_seg = labels[curchoice]
+            cur_colors = colors[curchoice]
+            cur_normals = normals[curchoice]
             if len(cur_semantic_seg) == 0:
                 continue
             mask = np.sum((cur_point_set >= (curmin - 0.001)) * (cur_point_set <= (curmax + 0.001)), axis=1) == 3
             choice = np.random.choice(len(cur_semantic_seg), npoints, replace=True)
             point_set = cur_point_set[choice]  # Nx3
-            normal_cur = normals[choice]
-            color_cur = colors[choice]
+            normal_cur = cur_normals[choice]
+            color_cur = cur_colors[choice]
             semantic_seg = cur_semantic_seg[choice]  # N
             mask = mask[choice]
             if sum(mask) / float(len(mask)) < 0.01:
