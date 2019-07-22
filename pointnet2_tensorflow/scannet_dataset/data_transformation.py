@@ -269,7 +269,7 @@ def get_transformed_dataset(train, prefetch=True):
         # prefetch loading from disk
         ds = ds.prefetch(8)
     ds = ds.map(label_map, 4)
-    if train == "train":
+    if train == "train" or train == "train_subset":
         ds = ds.map(get_subset, 4)
         ds = ds.map(random_rotate, 4)
     elif train == "val":

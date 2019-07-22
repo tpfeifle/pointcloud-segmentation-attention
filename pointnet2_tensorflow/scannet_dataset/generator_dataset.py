@@ -21,11 +21,15 @@ def scene_name_generator(train: str) -> Generator:
     elif train == "test":
         with open("splits/scannetv2_val.txt") as f:
             scenes = f.readlines()
+    elif train == "train_subset":
+        with open("splits/scannetv2_train.txt") as f:
+            scenes = f.readlines()
+            scenes = scenes[:len(scenes) // 3]
     else:
         raise ValueError("train must be 'train', 'val' or 'test'")
     # scenes = scenes[:1] # use this for overfit
     while True:
-        if train == "train":
+        if train == "train" or train == "train_subset":
             random.shuffle(scenes)
         for scene in scenes:
             yield (scene[:-1])
@@ -53,6 +57,12 @@ def tf_val_generator() -> Generator:
         yield (points, labels, colors, normals)
 
 
+def tf_train_subset_generator() -> Generator:
+    for scene_name in scene_name_generator("train_subset"):
+        points, labels, colors, normals = load_from_scene_name(scene_name)
+        yield (points, labels, colors, normals)
+
+
 def get_dataset(train):
     if train == "train":
         gen = tf_train_generator
@@ -66,6 +76,13 @@ def get_dataset(train):
                                               output_types=(tf.float32, tf.int32, tf.int32, tf.float32),
                                               output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
                                                              tf.TensorShape([None, 3]), tf.TensorShape([None, 3])))
+    elif train == "train_subset":
+        gen = tf_train_subset_generator
+        return tf.data.Dataset.from_generator(gen,
+                                              output_types=(tf.float32, tf.int32, tf.int32, tf.float32),
+                                              output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                             tf.TensorShape([None, 3]), tf.TensorShape([None, 3])))
+
     else:
         raise ValueError("use 'train' or 'val' for train")
 
