@@ -106,6 +106,26 @@ def get_precomputed_val_data_set():
                                                          tf.TensorShape([None])))
 
 
+def precomputed_train_subset_data_generator(dir="/home/tim/data/train_subset_precomputed"):
+    file_list = sorted(os.listdir(dir))
+    while True:
+        for filename in file_list:
+            if filename.endswith(".pickle"):
+                file = (os.path.join(dir, filename))
+                with open(file, "rb") as file:
+                    points_val, labels_val, colors_val, normals_val, sample_weight_val = pickle.load(file)
+                    yield points_val, labels_val, colors_val, normals_val, sample_weight_val
+
+
+def get_precomputed_train_subset_data_set():
+    gen = precomputed_train_data_generator
+    return tf.data.Dataset.from_generator(gen,
+                                          output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
+                                          output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                         tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
+                                                         tf.TensorShape([None])))
+
+
 def precompute_subset_train_data():
     ds = data_transformation.get_transformed_dataset("train_subset").prefetch(4)
     precompute_train_data(100, 1201 // 3, "/home/tim/data/train_subset_precomputed", ds, 0)
