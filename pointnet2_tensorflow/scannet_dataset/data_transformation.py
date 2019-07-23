@@ -19,6 +19,12 @@ def label_map(points, labels, colors, normals):
     # mapped_labels = tf.convert_to_tensor(mapped_labels)
     return points, mapped_labels, colors, normals
 
+def label_map_more_paraemters(labels):
+    map_values = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
+           33: 17, 34: 18, 36: 19, 39: 20}
+    mapped_labels = np.array(list(map(lambda label: map_values.get(label, 0), labels)))
+    return mapped_labels
+
 
 def get_subset(points, labels, colors, normals):
     npoints = 8192
@@ -252,6 +258,112 @@ def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
     colors_sets = np.concatenate(tuple(colors_sets), axis=0)
     normals_sets = np.concatenate(tuple(normals_sets), axis=0)
     return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights
+
+
+
+def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, normals):
+    npoints = 8192
+    label_weights = np.ones(21)
+    label_weights[0] = 0
+    points_orig_idxs = np.arange(len(points))
+
+    def shuffle_forward(l):
+        order = list(range(len(l)))
+        np.random.shuffle(order)
+        return list(np.array(l)[order]), order
+
+    coordmax = np.max(points, axis=0)
+    coordmin = np.min(points, axis=0)
+    nsubvolume_x = np.ceil((coordmax[0] - coordmin[0]) / 1.5).astype(np.int32)
+    nsubvolume_y = np.ceil((coordmax[1] - coordmin[1]) / 1.5).astype(np.int32)
+    point_sets = []
+    semantic_segs = []
+    sample_weights = []
+    colors_sets = []
+    normals_sets = []
+    reorders_sets = []
+    masks_sets = []
+    points_orig_idxs_sets = []
+    for i in range(nsubvolume_x):
+        for j in range(nsubvolume_y):
+            curmin = coordmin + [i * 1.5, j * 1.5, 0]
+            curmax = coordmin + [(i + 1) * 1.5, (j + 1) * 1.5, coordmax[2] - coordmin[2]]
+            curchoice = np.sum((points >= (curmin - 0.2)) * (points <= (curmax + 0.2)), axis=1) == 3
+            cur_point_set = points[curchoice]
+            cur_semantic_seg = labels[curchoice]
+            cur_colors = colors[curchoice]
+            cur_normals = normals[curchoice]
+            cur_points_orig_idxs = points_orig_idxs[curchoice]
+            if len(cur_semantic_seg) == 0:
+                continue
+            mask = np.sum((cur_point_set >= curmin) * (cur_point_set <= curmax), axis=1) == 3
+            # choice = np.random.choice(len(cur_semantic_seg), npoints, replace=True)
+            # 1. Shuffle points in cur_point_set and keep mapping to original
+            cur_point_set, order_to_inverse_shuffle = shuffle_forward(cur_point_set)
+            cur_normals = cur_normals[order_to_inverse_shuffle]
+            cur_colors = cur_colors[order_to_inverse_shuffle]
+            cur_semantic_seg = cur_semantic_seg[order_to_inverse_shuffle]
+            mask = mask[order_to_inverse_shuffle]
+            cur_points_orig_idxs = cur_points_orig_idxs[order_to_inverse_shuffle]
+            k = 0
+            for k in range(int(len(cur_point_set) / 8192)):
+                offset = k*8192
+                point_set = cur_point_set[offset:offset+8192]
+                normal_cur = cur_normals[offset:offset + 8192]
+                color_cur = cur_colors[offset:offset + 8192]
+                semantic_seg = cur_semantic_seg[offset:offset + 8192]
+                mask = mask[offset:offset + 8192]
+                points_orig_idxs_cur = cur_points_orig_idxs[offset:offset + 8192]
+                if sum(mask) == 0:  # TODO: why is len(mask) often Zero? --> remove the len(mask) == 0
+                    continue
+                sample_weight = label_weights[semantic_seg]
+                sample_weight *= mask  # N
+                point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
+                semantic_segs.append(np.expand_dims(semantic_seg, 0))  # 1xN
+                sample_weights.append(np.expand_dims(sample_weight, 0))  # 1xN
+                colors_sets.append(np.expand_dims(color_cur, 0))
+                normals_sets.append(np.expand_dims(normal_cur, 0))
+                reorders_sets.append(order_to_inverse_shuffle)  # needed to inverse shuffling
+                masks_sets.append(mask)  # needed to ignore predictions of points outside of the actual cube
+                points_orig_idxs_sets.append(points_orig_idxs_cur)
+
+            rest_idxs = len(cur_point_set) % 8192
+
+            ### Only for the rest all again
+            offset = k * 8192
+            # add random points of this "subset-frame" to fill up to 8192 (predictions for them get removed through masking)
+            fill_up_idxs = np.random.choice(len(cur_point_set), 8192-rest_idxs, replace=True)
+            point_set = np.concatenate((cur_point_set[offset:offset + rest_idxs], np.array(cur_point_set)[fill_up_idxs]))
+            normal_cur = np.concatenate((cur_normals[offset:offset + rest_idxs], np.array(cur_normals)[fill_up_idxs]))
+            color_cur = np.concatenate((cur_colors[offset:offset + rest_idxs], np.array(cur_colors)[fill_up_idxs]))
+            semantic_seg = np.concatenate((cur_semantic_seg[offset:offset + rest_idxs], np.array(cur_semantic_seg)[fill_up_idxs]))
+            # filter the added points out when saving predictions (so make them zero in the mask)
+            mask = np.concatenate((mask[offset:offset + rest_idxs], np.zeros(8192-rest_idxs)))
+            points_orig_idxs_cur = np.concatenate((cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192-rest_idxs)-1))
+            if sum(mask) / float(len(mask)) < 0.01:
+                continue
+            sample_weight = label_weights[semantic_seg]
+            # sample_weight *= mask  # N TODO: see above
+            point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
+            semantic_segs.append(np.expand_dims(semantic_seg, 0))  # 1xN
+            sample_weights.append(np.expand_dims(sample_weight, 0))  # 1xN
+            colors_sets.append(np.expand_dims(color_cur, 0))
+            normals_sets.append(np.expand_dims(normal_cur, 0))
+            #reorders_sets.append(order_to_inverse_shuffle)  # needed to inverse shuffling
+            masks_sets.append(mask)  # needed to ignore predictions of points outside of the actual cube
+            points_orig_idxs_sets.append(points_orig_idxs_cur)
+            ### END: Only for the rest all again
+
+
+
+    point_sets = np.concatenate(tuple(point_sets), axis=0)
+    semantic_segs = np.concatenate(tuple(semantic_segs), axis=0)
+    sample_weights = np.concatenate(tuple(sample_weights), axis=0)
+    colors_sets = np.concatenate(tuple(colors_sets), axis=0)
+    normals_sets = np.concatenate(tuple(normals_sets), axis=0)
+    #reorders_sets = np.concatenate(tuple(reorders_sets), axis=0)
+    #masks_sets = np.concatenate(tuple(masks_sets), axis=0)
+    return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights, masks_sets, points_orig_idxs_sets
 
 
 def random_rotate(points, labels, colors, normals, sample_weight):

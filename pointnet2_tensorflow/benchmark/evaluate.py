@@ -28,14 +28,14 @@ def load_ids(filename):
     ids = np.array(ids, dtype=np.int64)
     return ids
 
-parser = argparse.ArgumentParser()
+'''parser = argparse.ArgumentParser()
 parser.add_argument('--pred_path', required=True, help='path to directory of predicted .txt files')
 parser.add_argument('--gt_path', required=True, help='path to gt files')
 parser.add_argument('--output_file', default='', help='output file [default: pred_path/semantic_label_evaluation.txt]')
 opt = parser.parse_args()
 
 if opt.output_file == '':
-    opt.output_file = os.path.join(opt.pred_path, 'semantic_label_evaluation.txt')
+    opt.output_file = os.path.join(opt.pred_path, 'semantic_label_evaluation.txt')'''
 
 
 CLASS_LABELS = ['wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf', 'picture', 'counter', 'desk', 'curtain', 'refrigerator', 'shower curtain', 'toilet', 'sink', 'bathtub', 'otherfurniture']
@@ -129,19 +129,23 @@ def evaluate(pred_files, gt_files, output_file):
 
 
 def main():
-    pred_files = [f for f in os.listdir(opt.pred_path) if f.endswith('.txt') and f != 'semantic_label_evaluation.txt']
+    pred_path = "/home/tim/results/predictions"
+    gt_path = "/home/tim/results/groundtruth"
+    output_file = "/home/tim/results/results.txt"
+
+    pred_files = [f for f in os.listdir(pred_path) if f.endswith('.txt') and f != 'semantic_label_evaluation.txt']
     gt_files = []
     if len(pred_files) == 0:
         print('No result files found.')
     for i in range(len(pred_files)):
-        gt_file = os.path.join(opt.gt_path, pred_files[i])
+        gt_file = os.path.join(gt_path, pred_files[i])
         if not os.path.isfile(gt_file):
             print('Result file {} does not match any gt file'.format(pred_files[i]))
         gt_files.append(gt_file)
-        pred_files[i] = os.path.join(opt.pred_path, pred_files[i])
+        pred_files[i] = os.path.join(pred_path, pred_files[i])
 
     # evaluate
-    evaluate(pred_files, gt_files, opt.output_file)
+    evaluate(pred_files, gt_files, output_file)
 
 
 if __name__ == '__main__':

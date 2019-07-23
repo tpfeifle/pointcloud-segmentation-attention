@@ -19,7 +19,7 @@ def scene_name_generator(train: str) -> Generator:
         with open("splits/scannetv2_val.txt") as f:
             scenes = f.readlines()
     elif train == "test":
-        with open("splits/scannetv2_val.txt") as f:
+        with open("splits/scannetv2_test.txt") as f:
             scenes = f.readlines()
     else:
         raise ValueError("train must be 'train', 'val' or 'test'")
@@ -53,6 +53,15 @@ def tf_val_generator() -> Generator:
         yield (points, labels, colors, normals)
 
 
+def tf_eval_generator() -> Generator:
+    for scene_name in scene_name_generator("train"):
+        points, labels, colors, normals = load_from_scene_name(scene_name)
+        yield (points, labels, colors, normals, scene_name)
+        '''for i in range(int(points.shape[0] / 8192)):  # TODO do properly
+            offset = i*8192
+            yield (points[offset:offset+8192], labels[offset:offset+8192], colors[offset:offset+8192], normals[offset:offset+8192], scene_name.encode('utf-8'))'''
+
+
 def get_dataset(train):
     if train == "train":
         gen = tf_train_generator
@@ -66,6 +75,13 @@ def get_dataset(train):
                                               output_types=(tf.float32, tf.int32, tf.int32, tf.float32),
                                               output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
                                                              tf.TensorShape([None, 3]), tf.TensorShape([None, 3])))
+    elif train == "eval":
+        gen = tf_eval_generator
+        return tf.data.Dataset.from_generator(gen,
+                                              output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.string),
+                                              output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                             tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
+                                                             tf.TensorShape([])))
     else:
         raise ValueError("use 'train' or 'val' for train")
 

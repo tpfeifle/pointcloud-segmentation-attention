@@ -19,10 +19,10 @@ sys.path.insert(0,parentdir)
 from benchmark import util_3d
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--grid_file', required=True, help='path to predicted grid as np array')
-parser.add_argument('--world2grid_file', required=True, help='path to world2grid matrix as np array')
+parser.add_argument('--grid_file', required=False, help='path to predicted grid as np array')
+parser.add_argument('--world2grid_file', required=False, help='path to world2grid matrix as np array')
 parser.add_argument('--output_file', required=True, help='output file')
-parser.add_argument('--mesh_file', required=True, help='path to scene*_vh_clean_2.ply')
+parser.add_argument('--mesh_file', required=False, help='path to scene*_vh_clean_2.ply')
 opt = parser.parse_args()
 
 
@@ -43,8 +43,10 @@ def export(prediction_grid, world2grid, mesh_vertices, output_file):
 
 
 def main():
-    prediction_grid = np.load(opt.grid_file)
-    world2grid = np.load(opt.world2grid_file)
+    #prediction_grid = np.load(opt.grid_file)
+    #world2grid = np.load(opt.world2grid_file)
+    world2grid = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    prediction_grid = np.array([])
     assert len(prediction_grid.shape) == 3 and world2grid.shape == (4,4)
     mesh_vertices = util_3d.read_mesh_vertices(opt.mesh_file)
     export(prediction_grid, world2grid, mesh_vertices, opt.output_file)

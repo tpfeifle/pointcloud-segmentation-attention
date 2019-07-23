@@ -64,6 +64,24 @@ def precompute_val_data(elements, out_dir,
             else:
                 raise ValueError("the file already exists")
 
+def generate_eval_data():
+    for scene_name in generator_dataset.scene_name_generator("val"):
+        points_val, labels_val, colors_val, normals_val = generator_dataset.load_from_scene_name(scene_name)
+        labels_val = data_transformation.label_map_more_paraemters(labels_val.astype(np.int32))
+        subscenes = data_transformation.get_all_subsets_with_all_points_for_scene_numpy(points_val, labels_val, colors_val, normals_val)
+
+        for j in range(len(subscenes[0])):
+            points_val, labels_val, colors_val, normals_val, sample_weight_val, mask, points_orig_idxs = (x[j] for x in subscenes)
+            yield (points_val, labels_val, colors_val, normals_val, scene_name.encode('utf-8'), mask, points_orig_idxs)
+
+
+def eval_dataset_from_generator():
+    gen = generate_eval_data
+    return tf.data.Dataset.from_generator(gen,
+                                          output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.string, tf.int32, tf.int32),
+                                          output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                         tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
+                                                         tf.TensorShape([]), tf.TensorShape([None]), tf.TensorShape([None])))
 
 def precomputed_train_data_generator(dir="/home/tim/data/train_precomputed"):
     file_list = sorted(os.listdir(dir))
@@ -119,6 +137,10 @@ def main():
     batch = train_ds.make_one_shot_iterator().get_next()
     first_batch = sess.run(batch)
     print("train batch", first_batch)
+
+    #for data in generate_eval_data():
+    #    a = data
+
     # precompute_val_data(312, "/home/tim/data/val_precomputed")
     # ds = data_transformation.get_transformed_dataset("train").prefetch(4)
     # precompute_train_data(60, 1201, "/home/tim/data/train_precomputed", ds, 40)
