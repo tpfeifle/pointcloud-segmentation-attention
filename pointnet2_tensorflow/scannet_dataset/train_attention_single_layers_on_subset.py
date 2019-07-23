@@ -12,7 +12,7 @@ N_POINTS = 8192
 N_TRAIN_SAMPLES = 1201 // 3
 N_VAL_SAMPLES = 4542 // 3
 BATCH_SIZE = 16
-LOG_DIR = os.path.join('/home/tim/training_log/subset/baseline%s' % int(time.time()))
+LOG_DIR = None
 
 class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
                              4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025,
@@ -51,7 +51,9 @@ def show_prediction_historgram(prediction):
     plt.show()
 
 def train_all():
-    for model_func in [model.get_model_l1, model.get_model_l2, model.get_model_l3, model.get_model_l4]:
+    global LOG_DIR
+    for i, model_func in enumerate([model.get_model_l1, model.get_model_l2, model.get_model_l3, model.get_model_l4]):
+        LOG_DIR = os.path.join(f'/home/tim/training_log/subset/attention_in_layer_{i}_{int(time.time())}')
         train_single_layer(model_func)
 
 def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to_val=4):
