@@ -4,24 +4,33 @@ import numpy as np
 import tensorflow as tf
 
 import scannet_dataset.generator_dataset as gd
+from scannet_dataset import generator_dataset
 
 
 def label_map(points, labels, colors, normals):
     # TODO this mapping is maybe wrong, review this!
-    # map = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 11: 12, 13: 13, 15: 14, 23: 15, 27: 16,
-    #        32: 17, 33: 18, 35: 19, 38: 20}
     map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
            33: 17, 34: 18, 36: 19, 39: 20}
     map = tf.convert_to_tensor([map.get(i, 0) for i in range(41)])
     labels = tf.minimum(labels, 40)
     mapped_labels = tf.gather(map, labels)
-    # mapped_labels = [map.get(label, 0) for label in labels]
-    # mapped_labels = tf.convert_to_tensor(mapped_labels)
     return points, mapped_labels, colors, normals
 
-def label_map_more_paraemters(labels):
-    map_values = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
+
+def label_map_numpy(points, labels, colors, normals):
+    # TODO this mapping is maybe wrong, review this!
+    map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
            33: 17, 34: 18, 36: 19, 39: 20}
+    map = np.array([map.get(i, 0) for i in range(41)])
+    labels = np.minimum(labels, 40)
+    mapped_labels = map[labels]
+    return points, mapped_labels, colors, normals
+
+
+def label_map_more_paraemters(labels):
+    map_values = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15,
+                  28: 16,
+                  33: 17, 34: 18, 36: 19, 39: 20}
     mapped_labels = np.array(list(map(lambda label: map_values.get(label, 0), labels)))
     return mapped_labels
 
@@ -237,6 +246,7 @@ def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
             if len(cur_semantic_seg) == 0:
                 continue
             mask = np.sum((cur_point_set >= (curmin - 0.001)) * (cur_point_set <= (curmax + 0.001)), axis=1) == 3
+            print("mask", mask.shape, type(mask), mask)
             choice = np.random.choice(len(cur_semantic_seg), npoints, replace=True)
             point_set = cur_point_set[choice]  # Nx3
             normal_cur = cur_normals[choice]
@@ -260,12 +270,11 @@ def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
     return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights
 
 
-
 def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, normals):
     npoints = 8192
     label_weights = np.ones(21)
     label_weights[0] = 0
-    points_orig_idxs = np.arange(len(points))
+    points_orig_idxs = np.arange(len(points), dtype=int)
 
     def shuffle_forward(l):
         order = list(range(len(l)))
@@ -281,7 +290,6 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
     sample_weights = []
     colors_sets = []
     normals_sets = []
-    reorders_sets = []
     masks_sets = []
     points_orig_idxs_sets = []
     for i in range(nsubvolume_x):
@@ -305,42 +313,54 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             cur_semantic_seg = cur_semantic_seg[order_to_inverse_shuffle]
             mask = mask[order_to_inverse_shuffle]
             cur_points_orig_idxs = cur_points_orig_idxs[order_to_inverse_shuffle]
+            assert len(cur_point_set) == len(cur_normals)
+            assert len(cur_point_set) == len(cur_colors)
+            assert len(cur_point_set) == len(cur_semantic_seg)
+            assert len(cur_point_set) == len(mask)
+            assert len(cur_point_set) == len(cur_points_orig_idxs)
             k = 0
             for k in range(int(len(cur_point_set) / 8192)):
-                offset = k*8192
-                point_set = cur_point_set[offset:offset+8192]
+                offset = k * 8192
+                point_set = cur_point_set[offset:offset + 8192]
                 normal_cur = cur_normals[offset:offset + 8192]
                 color_cur = cur_colors[offset:offset + 8192]
                 semantic_seg = cur_semantic_seg[offset:offset + 8192]
-                mask = mask[offset:offset + 8192]
+                mask_cur = mask[offset:offset + 8192]
                 points_orig_idxs_cur = cur_points_orig_idxs[offset:offset + 8192]
-                if sum(mask) == 0:  # TODO: why is len(mask) often Zero? --> remove the len(mask) == 0
+                if sum(mask_cur) == 0:  # TODO: why is len(mask) often Zero? --> remove the len(mask) == 0
+                    print("oh no!!")
+                    print(len(mask_cur))
                     continue
                 sample_weight = label_weights[semantic_seg]
-                sample_weight *= mask  # N
+                sample_weight *= mask_cur  # N
                 point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
                 semantic_segs.append(np.expand_dims(semantic_seg, 0))  # 1xN
                 sample_weights.append(np.expand_dims(sample_weight, 0))  # 1xN
                 colors_sets.append(np.expand_dims(color_cur, 0))
                 normals_sets.append(np.expand_dims(normal_cur, 0))
-                reorders_sets.append(order_to_inverse_shuffle)  # needed to inverse shuffling
-                masks_sets.append(mask)  # needed to ignore predictions of points outside of the actual cube
-                points_orig_idxs_sets.append(points_orig_idxs_cur)
+                masks_sets.append(
+                    np.expand_dims(mask_cur, 0))  # needed to ignore predictions of points outside of the actual cube
+                points_orig_idxs_sets.append(np.expand_dims(points_orig_idxs_cur, 0))
 
             rest_idxs = len(cur_point_set) % 8192
 
             ### Only for the rest all again
             offset = k * 8192
             # add random points of this "subset-frame" to fill up to 8192 (predictions for them get removed through masking)
-            fill_up_idxs = np.random.choice(len(cur_point_set), 8192-rest_idxs, replace=True)
-            point_set = np.concatenate((cur_point_set[offset:offset + rest_idxs], np.array(cur_point_set)[fill_up_idxs]))
+            fill_up_idxs = np.random.choice(len(cur_point_set), 8192 - rest_idxs, replace=True)
+            point_set = np.concatenate(
+                (cur_point_set[offset:offset + rest_idxs], np.array(cur_point_set)[fill_up_idxs]))
             normal_cur = np.concatenate((cur_normals[offset:offset + rest_idxs], np.array(cur_normals)[fill_up_idxs]))
             color_cur = np.concatenate((cur_colors[offset:offset + rest_idxs], np.array(cur_colors)[fill_up_idxs]))
-            semantic_seg = np.concatenate((cur_semantic_seg[offset:offset + rest_idxs], np.array(cur_semantic_seg)[fill_up_idxs]))
+            semantic_seg = np.concatenate(
+                (cur_semantic_seg[offset:offset + rest_idxs], np.array(cur_semantic_seg)[fill_up_idxs]))
             # filter the added points out when saving predictions (so make them zero in the mask)
-            mask = np.concatenate((mask[offset:offset + rest_idxs], np.zeros(8192-rest_idxs)))
-            points_orig_idxs_cur = np.concatenate((cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192-rest_idxs)-1))
-            if sum(mask) / float(len(mask)) < 0.01:
+            mask_cur = np.concatenate((mask[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=bool)))
+            points_orig_idxs_cur = np.concatenate(
+                (cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=int) - 1))
+            if sum(mask_cur) == 0:
+                print("oh no!")
+                print(len(mask_cur))
                 continue
             sample_weight = label_weights[semantic_seg]
             # sample_weight *= mask  # N TODO: see above
@@ -349,20 +369,18 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             sample_weights.append(np.expand_dims(sample_weight, 0))  # 1xN
             colors_sets.append(np.expand_dims(color_cur, 0))
             normals_sets.append(np.expand_dims(normal_cur, 0))
-            #reorders_sets.append(order_to_inverse_shuffle)  # needed to inverse shuffling
-            masks_sets.append(mask)  # needed to ignore predictions of points outside of the actual cube
-            points_orig_idxs_sets.append(points_orig_idxs_cur)
+            masks_sets.append(
+                np.expand_dims(mask_cur, 0))  # needed to ignore predictions of points outside of the actual cube
+            points_orig_idxs_sets.append(np.expand_dims(points_orig_idxs_cur, 0))
             ### END: Only for the rest all again
-
-
 
     point_sets = np.concatenate(tuple(point_sets), axis=0)
     semantic_segs = np.concatenate(tuple(semantic_segs), axis=0)
     sample_weights = np.concatenate(tuple(sample_weights), axis=0)
     colors_sets = np.concatenate(tuple(colors_sets), axis=0)
     normals_sets = np.concatenate(tuple(normals_sets), axis=0)
-    #reorders_sets = np.concatenate(tuple(reorders_sets), axis=0)
-    #masks_sets = np.concatenate(tuple(masks_sets), axis=0)
+    masks_sets = np.concatenate(tuple(masks_sets), axis=0)
+    points_orig_idxs_sets = np.concatenate(tuple(points_orig_idxs_sets), axis=0)
     return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights, masks_sets, points_orig_idxs_sets
 
 
@@ -391,7 +409,33 @@ def get_transformed_dataset(train, prefetch=True):
     return ds
 
 
+def map_back(values, original_idx, mask, res_shape):
+    print("len mask:", len(mask), "len values", len(values), "len original idx", len(original_idx))
+    values = values[mask]
+    original_idx = original_idx[mask]
+
+    res = np.ones(res_shape) * -666
+    res[original_idx] = values
+    return res
+
+
 if __name__ == '__main__':
+    for i in generator_dataset.tf_val_generator():
+        i = label_map_numpy(*i)
+        points_orig, labels_orig, colors_orig, normals_orig = i
+        points, labels, colors, normals, sample_weights, masks, points_orig_idxs = \
+            get_all_subsets_with_all_points_for_scene_numpy(*i)
+        points = points.reshape((points.shape[0] * points.shape[1], points.shape[2]))
+        labels = labels.flatten()
+        masks = masks.flatten()
+        points_orig_idxs = points_orig_idxs.flatten()
+
+        restored_points = map_back(points, points_orig_idxs, masks, points_orig.shape)
+        print("restored points", restored_points.shape, restored_points)
+        print("unchanged values", np.sum(restored_points == -666), "total values",
+              np.sum(np.ones_like(restored_points)))
+        break
+    exit(0)
     ds = gd.get_dataset("val")
     ds = ds.map(label_map, 4)
     ds = ds.map(get_all_subsets_for_scene, 4)
