@@ -4,6 +4,7 @@ import tensorflow as tf
 
 from utils import tf_util
 from utils.pointnet_util import sample_and_group, sample_and_group_all
+from utils.tf_util import batch_norm_for_conv2d
 
 
 class AttentionLayer(tf.keras.layers.Layer):
@@ -215,7 +216,7 @@ def pointnet_sa_module_attention(xyz, points, npoint, radius, nsample, mlp, mlp2
     Like PointNet Set Abstraction (SA) Module but with attention instead of pooling
     """
     data_format = 'NCHW' if use_nchw else 'NHWC'
-    with tf.variable_scope(scope) as sc:
+    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE) as sc:
         # Sample and Grouping
         if group_all:
             nsample = xyz.get_shape()[1].value
@@ -259,6 +260,7 @@ def pointnet_sa_module_attention(xyz, points, npoint, radius, nsample, mlp, mlp2
         print("query vectors", query_vectors.shape)
         new_points = attention_layer([new_points, query_vectors])
         new_points = tf.expand_dims(new_points, [2])
+        new_points = batch_norm_for_conv2d(new_points, is_training, bn_decay, scope, data_format)
         print("new_points after attention", new_points.shape)
 
         # [Optional] Further Processing
