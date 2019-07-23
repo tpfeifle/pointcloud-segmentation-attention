@@ -27,6 +27,7 @@ def deserialize_feature(feature):
 
 
 def precompute_train_data(epochs, elements_per_epoch, out_dir, dataset, add_epoch=0):
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     sess = tf.Session()
     data_iterator = tf.data.Iterator.from_structure(dataset.output_types, dataset.output_shapes)
     train_data_init = data_iterator.make_initializer(dataset)
@@ -123,7 +124,59 @@ def get_precomputed_val_data_set():
                                                          tf.TensorShape([None])))
 
 
+def precomputed_train_subset_data_generator(dir="/home/tim/data/train_subset_precomputed"):
+    file_list = sorted(os.listdir(dir))
+    while True:
+        for filename in file_list:
+            if filename.endswith(".pickle"):
+                file = (os.path.join(dir, filename))
+                with open(file, "rb") as file:
+                    points_val, labels_val, colors_val, normals_val, sample_weight_val = pickle.load(file)
+                    yield points_val, labels_val, colors_val, normals_val, sample_weight_val
+
+
+def get_precomputed_train_subset_data_set():
+    gen = precomputed_train_data_generator
+    return tf.data.Dataset.from_generator(gen,
+                                          output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
+                                          output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                         tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
+                                                         tf.TensorShape([None])))
+
+
+def precomputed_val_subset_data_generator(dir="/home/tim/data/val_precomputed"):
+    file_list = sorted(os.listdir(dir))
+    file_list = file_list[:len(file_list) // 3]
+    print("val files", len(file_list))
+    while True:
+        for filename in file_list:
+            if filename.endswith(".pickle"):
+                file = (os.path.join(dir, filename))
+                with open(file, "rb") as file:
+                    points_val, labels_val, colors_val, normals_val, sample_weight_val = pickle.load(file)
+                    yield points_val, labels_val, colors_val, normals_val, sample_weight_val
+
+
+def get_precomputed_val_subset_data_set():
+    gen = precomputed_val_subset_data_generator
+    return tf.data.Dataset.from_generator(gen,
+                                          output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
+                                          output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
+                                                         tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
+                                                         tf.TensorShape([None])))
+
+
+def precompute_subset_train_data():
+    ds = data_transformation.get_transformed_dataset("train_subset").prefetch(4)
+    precompute_train_data(100, 1201 // 3, "/home/tim/data/train_subset_precomputed", ds, 0)
+    print("done")
+
+
 def main():
+    for i in precomputed_val_subset_data_generator():
+        pass
+
+    # debug validation iterator
     sess = tf.Session()
     val_ds = get_precomputed_val_data_set()
     batch = val_ds.make_one_shot_iterator().get_next()
@@ -132,16 +185,23 @@ def main():
     for i in first_batch:
         print(i.shape)
 
+    # debug train iterator
     train_ds = get_precomputed_train_data_set()
     train_ds = train_ds.batch(16).prefetch(2)
     batch = train_ds.make_one_shot_iterator().get_next()
     first_batch = sess.run(batch)
     print("train batch", first_batch)
 
-    #for data in generate_eval_data():
+    # for data in generate_eval_data():
     #    a = data
+    # precompute a subset of the data
+    # precompute_subset_train_data()
 
+    # precompute val data
     # precompute_val_data(312, "/home/tim/data/val_precomputed")
+    # print("done")
+
+    # precompute train data
     # ds = data_transformation.get_transformed_dataset("train").prefetch(4)
     # precompute_train_data(60, 1201, "/home/tim/data/train_precomputed", ds, 40)
 
