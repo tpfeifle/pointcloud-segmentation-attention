@@ -6,18 +6,14 @@
 # example usage: export_train_mesh_for_evaluation.py --scan_path [path to scan data] --output_file [output file] --type label
 # Note: technically does not need to load in the ply file, since the ScanNet annotations are defined against the mesh vertices, but we load it in here as an example.
 
-# python imports
-import math
-import os, sys, argparse
-import inspect
 import json
+# python imports
+import os
+
 import numpy as np
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir)
-from benchmark import util
-from benchmark import util_3d
+from attention_points.benchmark import util
+from attention_points.benchmark import util_3d
 
 TASK_TYPES = {'label', 'instance'}
 
@@ -38,7 +34,7 @@ def read_aggregation(filename):
         data = json.load(f)
         num_objects = len(data['segGroups'])
         for i in range(num_objects):
-            object_id = data['segGroups'][i]['objectId'] + 1 # instance ids should be 1-indexed
+            object_id = data['segGroups'][i]['objectId'] + 1  # instance ids should be 1-indexed
             label = data['segGroups'][i]['label']
             segs = data['segGroups'][i]['segments']
             object_id_to_segs[object_id] = segs
@@ -68,7 +64,7 @@ def export(agg_file, seg_file, label_map_file, type, output_file):
     label_map = util.read_label_mapping(label_map_file, label_from='raw_category', label_to='nyu40id')
     object_id_to_segs, label_to_segs = read_aggregation(agg_file)
     seg_to_verts, num_verts = read_segmentation(seg_file)
-    label_ids = np.zeros(shape=(num_verts), dtype=np.uint32)     # 0: unannotated
+    label_ids = np.zeros(shape=(num_verts), dtype=np.uint32)  # 0: unannotated
     for label, segs in label_to_segs.items():
         label_id = label_map[label]
         for seg in segs:
@@ -81,14 +77,14 @@ def export(agg_file, seg_file, label_map_file, type, output_file):
 
 
 def main():
-    scan_path = "/Users/tim/Downloads/scannet_downloads/scans/" # scene0568_01/
+    scan_path = "/Users/tim/Downloads/scannet_downloads/scans/"  # scene0568_01/
     output_path = "/Users/tim/Downloads/scannet_groundtruth/"
     scene_folders = [dI for dI in os.listdir(scan_path) if os.path.isdir(os.path.join(scan_path, dI))]
     for folder in scene_folders:
-        output_file = output_path + folder + ".txt" #""truth0568_01.txt"
+        output_file = output_path + folder + ".txt"  # ""truth0568_01.txt"
         label_map_file = "/Users/tim/Downloads/scannet_downloads/scannetv2-labels.combined.tsv"
         type = "label"
-        scan_name = folder #os.path.split(scan_path)[-1]
+        scan_name = folder  # os.path.split(scan_path)[-1]
         scene_path = os.path.join(scan_path, folder)
         agg_file = os.path.join(scene_path, scan_name + '.aggregation.json')
         seg_file = os.path.join(scene_path, scan_name + '_vh_clean_2.0.010000.segs.json')

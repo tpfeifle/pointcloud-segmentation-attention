@@ -9,11 +9,13 @@
 #
 # example usage: evaluate_semantic_label.py --scan_path [path to scan data] --output_file [output file]
 
-# python imports
-import math
-import os, sys, argparse
 import inspect
+# python imports
+import os
+import sys
+
 import numpy as np
+
 try:
     from itertools import izip
 except ImportError:
@@ -21,12 +23,14 @@ except ImportError:
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir)
+sys.path.insert(0, parentdir)
+
 
 def load_ids(filename):
     ids = open(filename).read().splitlines()
     ids = np.array(ids, dtype=np.int64)
     return ids
+
 
 '''parser = argparse.ArgumentParser()
 parser.add_argument('--pred_path', required=True, help='path to directory of predicted .txt files')
@@ -37,8 +41,9 @@ opt = parser.parse_args()
 if opt.output_file == '':
     opt.output_file = os.path.join(opt.pred_path, 'semantic_label_evaluation.txt')'''
 
-
-CLASS_LABELS = ['wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf', 'picture', 'counter', 'desk', 'curtain', 'refrigerator', 'shower curtain', 'toilet', 'sink', 'bathtub', 'otherfurniture']
+CLASS_LABELS = ['wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf', 'picture',
+                'counter', 'desk', 'curtain', 'refrigerator', 'shower curtain', 'toilet', 'sink', 'bathtub',
+                'otherfurniture']
 VALID_CLASS_IDS = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24, 28, 33, 34, 36, 39])
 UNKNOWN_ID = np.max(VALID_CLASS_IDS) + 1
 
@@ -55,7 +60,7 @@ def evaluate_scan(pred_file, gt_file, confusion):
     # sanity checks
     if not pred_ids.shape == gt_ids.shape:
         print('%s: number of predicted values does not match number of vertices' % pred_file)
-    for (gt_val,pred_val) in izip(gt_ids.flatten(),pred_ids.flatten()):
+    for (gt_val, pred_val) in izip(gt_ids.flatten(), pred_ids.flatten()):
         if gt_val not in VALID_CLASS_IDS:
             continue
         if pred_val not in VALID_CLASS_IDS:
@@ -91,25 +96,25 @@ def write_result_file(confusion, ious, filename):
         f.write('\nconfusion matrix\n')
         f.write('\t\t\t')
         for i in range(len(VALID_CLASS_IDS)):
-            #f.write('\t{0:<14s}({1:<2d})'.format(CLASS_LABELS[i], VALID_CLASS_IDS[i]))
+            # f.write('\t{0:<14s}({1:<2d})'.format(CLASS_LABELS[i], VALID_CLASS_IDS[i]))
             f.write('{0:<8d}'.format(VALID_CLASS_IDS[i]))
         f.write('\n')
         for r in range(len(VALID_CLASS_IDS)):
             f.write('{0:<14s}({1:<2d})'.format(CLASS_LABELS[r], VALID_CLASS_IDS[r]))
             for c in range(len(VALID_CLASS_IDS)):
-                f.write('\t{0:>5.3f}'.format(confusion[VALID_CLASS_IDS[r],VALID_CLASS_IDS[c]]))
+                f.write('\t{0:>5.3f}'.format(confusion[VALID_CLASS_IDS[r], VALID_CLASS_IDS[c]]))
             f.write('\n')
     print('wrote results to', filename)
 
 
 def evaluate(pred_files, gt_files, output_file):
     max_id = UNKNOWN_ID
-    confusion = np.zeros((max_id+1, max_id+1), dtype=np.ulonglong)
+    confusion = np.zeros((max_id + 1, max_id + 1), dtype=np.ulonglong)
 
     print('evaluating', len(pred_files), 'scans...')
     for i in range(len(pred_files)):
         evaluate_scan(pred_files[i], gt_files[i], confusion)
-        sys.stdout.write("\rscans processed: {}".format(i+1))
+        sys.stdout.write("\rscans processed: {}".format(i + 1))
         sys.stdout.flush()
     print('')
 
@@ -123,9 +128,10 @@ def evaluate(pred_files, gt_files, output_file):
     print('----------------------------')
     for i in range(len(VALID_CLASS_IDS)):
         label_name = CLASS_LABELS[i]
-        #print('{{0:<14s}: 1:>5.3f}'.format(label_name, class_ious[label_name][0]))
-        #if(not isinstance(class_ious[label_name], float)): # TODO this is custom and should not be here
-        print('{0:<14s}: {1:>5.3f}   ({2:>6d}/{3:<6d})'.format(label_name, class_ious[label_name][0], class_ious[label_name][1], class_ious[label_name][2]))
+        # print('{{0:<14s}: 1:>5.3f}'.format(label_name, class_ious[label_name][0]))
+        # if(not isinstance(class_ious[label_name], float)): # TODO this is custom and should not be here
+        print('{0:<14s}: {1:>5.3f}   ({2:>6d}/{3:<6d})'.format(label_name, class_ious[label_name][0],
+                                                               class_ious[label_name][1], class_ious[label_name][2]))
     write_result_file(confusion, class_ious, output_file)
 
 

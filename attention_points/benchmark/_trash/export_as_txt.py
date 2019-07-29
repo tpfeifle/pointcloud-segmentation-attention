@@ -8,15 +8,9 @@
 # example usage: export_semantic_label_grid_for_evaluation.py --grid_file [path to predicted grid] --world2grid_file [path to world to grid] --output_file [output file] --mesh_file [path to corresponding mesh file]
 
 # python imports
-import math
-import os, sys, argparse
-import inspect
 import numpy as np
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir)
-from benchmark import util_3d
+from attention_points.benchmark import util_3d
 
 
 def main():

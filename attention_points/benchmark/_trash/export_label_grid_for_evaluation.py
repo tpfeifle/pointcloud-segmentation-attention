@@ -8,15 +8,11 @@
 # example usage: export_semantic_label_grid_for_evaluation.py --grid_file [path to predicted grid] --world2grid_file [path to world to grid] --output_file [output file] --mesh_file [path to corresponding mesh file]
 
 # python imports
-import math
-import os, sys, argparse
-import inspect
+import argparse
+
 import numpy as np
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir)
-from benchmark import util_3d
+from attention_points.benchmark import util_3d
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--grid_file', required=False, help='path to predicted grid as np array')
@@ -37,17 +33,17 @@ def export(prediction_grid, world2grid, mesh_vertices, output_file):
         v = vertices_grid[i]
         grid_coord = np.floor(v)
         # clamp to grid bounds
-        grid_coord = np.clip(grid_coord, np.zeros((3)), grid_dim-1).astype(np.int32)
+        grid_coord = np.clip(grid_coord, np.zeros((3)), grid_dim - 1).astype(np.int32)
         ids[i] = prediction_grid[grid_coord[2], grid_coord[1], grid_coord[0]]
     util_3d.export_ids(output_file, ids)
 
 
 def main():
-    #prediction_grid = np.load(opt.grid_file)
-    #world2grid = np.load(opt.world2grid_file)
+    # prediction_grid = np.load(opt.grid_file)
+    # world2grid = np.load(opt.world2grid_file)
     world2grid = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
     prediction_grid = np.array([])
-    assert len(prediction_grid.shape) == 3 and world2grid.shape == (4,4)
+    assert len(prediction_grid.shape) == 3 and world2grid.shape == (4, 4)
     mesh_vertices = util_3d.read_mesh_vertices(opt.mesh_file)
     export(prediction_grid, world2grid, mesh_vertices, opt.output_file)
 

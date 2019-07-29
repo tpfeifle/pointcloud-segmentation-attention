@@ -2,10 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-import models.pointnet2_sem_seg as model
-from scannet_dataset import generator_dataset
-from scannet import pc_util
-from PIL import Image
+import pointnet2_tensorflow.models.pointnet2_sem_seg as model
+from attention_points.scannet_dataset import generator_dataset
 
 N_POINTS = 8192
 N_VAL_SAMPLES = 4542
@@ -16,6 +14,7 @@ class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.7857544
                              4.809412839311939, 5.052097251455304, 5.389129668645318, 5.390614085649042,
                              5.127458225110977, 5.086056870814752, 5.3831185190895265, 5.422684124268539,
                              5.422955391988761, 5.433705358072363, 5.417426773812747, 4.870172044153657])
+
 
 # saved_model_path = "/home/tim/training_log/baseline/long_run1563533884_train/best_model_epoch_260.ckpt"
 
@@ -37,6 +36,7 @@ def normalize_features_fixed(x, current_range):
     x_normed = (x - current_min) / (current_max - current_min)
     x_normed = x_normed * (normed_max - normed_min) + normed_min
     return x_normed
+
 
 def show_prediction_historgram(prediction):
     # visualize for debugging
@@ -64,10 +64,9 @@ def train(batch_size=BATCH_SIZE):
     points, labels, colors, normals, scene_name = val_iterator.get_next()
     # val_features = tf.concat([tf.cast(colors, tf.float32), normals], 2)
     val_features = tf.concat([normalize_features_fixed(tf.cast(colors, tf.float32), [0, 255]),
-                                      normalize_features_fixed(normals, [-1, 1])], 2)
+                              normalize_features_fixed(normals, [-1, 1])], 2)
     val_coordinates = points
     val_labels = labels
-
 
     # define model and metrics
     is_training_pl = tf.Variable(False)
@@ -105,7 +104,8 @@ def train(batch_size=BATCH_SIZE):
     all_points = []
     current_scene = ""
     for j in range(val_batches):
-        predictions_res, labels_res, points_res, scene, thefeatures, acc_train, train_iou_val = sess.run([val_pred, val_labels, val_coordinates, scene_name, val_features, val_acc, val_iou])
+        predictions_res, labels_res, points_res, scene, thefeatures, acc_train, train_iou_val = sess.run(
+            [val_pred, val_labels, val_coordinates, scene_name, val_features, val_acc, val_iou])
         max_pred = np.argmax(predictions_res, axis=2)
         # show_prediction_historgram(predictions_res)
         print(f"\taccuracy: {acc_train:.4f}\taccumulated iou: {train_iou_val:.4f}")
@@ -116,13 +116,13 @@ def train(batch_size=BATCH_SIZE):
             # pc_util.draw_point_cloud(all_points)
             np.save("/home/tim/features_points_%s.npy" % scene[0].decode('ascii'), all_points)
             np.save("/home/tim/features_pred_%s.npy" % scene[0].decode('ascii'), all_pred)
-            #image1 = pc_util.point_cloud_three_views(all_points)
-            #img = Image.fromarray(np.uint8(image1 * 255.0))
-            #img.save(scene[0].decode('ascii') + "_3views.jpg")
-            #image = pc_util.point_cloud_to_image(all_points, 500)
-            #img = Image.fromarray(np.uint8(image * 255.0))
-            #img.save(scene[0].decode('ascii') + "toImage.jpg")
-            #uvidx, uvlabel, nvox = pc_util.point_cloud_label_to_surface_voxel_label(all_points, all_pred)  # res=
+            # image1 = pc_util.point_cloud_three_views(all_points)
+            # img = Image.fromarray(np.uint8(image1 * 255.0))
+            # img.save(scene[0].decode('ascii') + "_3views.jpg")
+            # image = pc_util.point_cloud_to_image(all_points, 500)
+            # img = Image.fromarray(np.uint8(image * 255.0))
+            # img.save(scene[0].decode('ascii') + "toImage.jpg")
+            # uvidx, uvlabel, nvox = pc_util.point_cloud_label_to_surface_voxel_label(all_points, all_pred)  # res=
             all_pred = []
             all_labels = []
             all_points = []
@@ -130,7 +130,6 @@ def train(batch_size=BATCH_SIZE):
         all_labels.append(np.squeeze(val_labels))
         all_points.append(np.squeeze(points_res))
         current_scene = scene
-
 
 
 if __name__ == '__main__':
