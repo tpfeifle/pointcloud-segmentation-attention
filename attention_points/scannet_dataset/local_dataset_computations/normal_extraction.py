@@ -21,10 +21,9 @@ def normals_to_np_array(filename):
         return normals
 
 
-def read_normal_vectors():
-    target_dir = "C:/scannet-pre/"
+def read_normal_vectors(source_dir="C:/scannet_normal/", target_dir="C:/scannet-pre/"):
     i = 0
-    for subdir, dirs, files in os.walk("C:/scannet_normal/"):
+    for subdir, dirs, files in os.walk(source_dir):
         for file in files:
             i += 1
             if file.endswith("_vh_clean_2.ply"):

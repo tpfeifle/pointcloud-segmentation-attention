@@ -1,3 +1,7 @@
+"""
+this module provides several generators which yield scenes of the dataset
+these generators are used to create tensorflow datasets
+"""
 import random
 from typing import Generator, List
 
@@ -39,6 +43,9 @@ def scene_name_generator(train: str) -> Generator:
 
 
 def load_from_scene_name(scene_name, pre_files_dir="/home/tim/scannet-pre/") -> List[np.ndarray]:
+    """
+    loads points, labels, colors and normals from the preprocessed data
+    """
     points = np.load(pre_files_dir + "points/" + scene_name + ".npy")
     labels = np.load(pre_files_dir + "labels/" + scene_name + ".npy")
     colors = np.load(pre_files_dir + "colors/" + scene_name + "_vh_clean_2.ply.npy")
@@ -49,6 +56,9 @@ def load_from_scene_name(scene_name, pre_files_dir="/home/tim/scannet-pre/") -> 
 
 
 def load_from_scene_name_test(scene_name, pre_files_dir="/home/tim/scannet_test_data/") -> List[np.ndarray]:
+    """
+    loads points, colors and normals
+    """
     points = np.load(pre_files_dir + "points/" + scene_name + "_vh_clean_2.ply.npy")
     colors = np.load(pre_files_dir + "colors/" + scene_name + "_vh_clean_2.ply.npy")
     normals = np.load(pre_files_dir + "normals/" + scene_name + "_vh_clean_2.ply.npy")
@@ -96,6 +106,10 @@ def tf_test_generator() -> Generator:
 
 
 def get_dataset(train):
+    """
+    returns a tensorflow dataset with the data specified in train
+    :param train: can be ["train", "val", "eval", "test", "train_subset"]
+    """
     if train == "train":
         gen = tf_train_generator
         return tf.data.Dataset.from_generator(gen,
@@ -115,7 +129,7 @@ def get_dataset(train):
                                               output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
                                                              tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
                                                              tf.TensorShape([])))
-    elif train == "eval2":
+    elif train == "eval2": # TODO what is this for?
         gen = tf_eval_generator
         return tf.data.Dataset.from_generator(gen,
                                               output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.string),

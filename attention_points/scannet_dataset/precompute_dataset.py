@@ -1,3 +1,7 @@
+"""
+This module provides methods to precompute, save and load training data.
+This allows to speed up training, as the random subscenes do not have to be generated on the fly.
+"""
 import os.path
 import pickle
 
@@ -7,26 +11,15 @@ import tensorflow as tf
 from attention_points.scannet_dataset import generator_dataset, data_transformation
 
 
-def _float_feature(value):
-    """Returns a float_list from a float / double."""
-    return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
-
-
-def _int64_feature(value):
-    """Returns an int64_list from a bool / enum / int / uint."""
-    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
-
-
-def deserialize_feature(feature):
-    feature = {"points": tf.parse_tensor(feature["points"], np.float32),
-               "labels": tf.parse_tensor(feature["labels"], np.int32),
-               "colors": tf.parse_tensor(feature["colors"], np.int32),
-               "normals": tf.parse_tensor(feature["normals"], np.float32),
-               "sample_weights": tf.parse_tensor(feature["sample_weights"], np.float32)}
-    return feature
-
-
 def precompute_train_data(epochs, elements_per_epoch, out_dir, dataset, add_epoch=0):
+    """
+    precomputes train data
+    :param epochs: number of epochs to precompute (random chunks do not cover whole scenes, set >=20)
+    :param elements_per_epoch: number of elements loaded from dataset for a single epoch
+    :param out_dir: directory to save files to
+    :param dataset: tensorflow dataset to load scenes from
+    :param add_epoch: offset of epoch name (to continue interrupted precomputation)
+    """
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     sess = tf.Session()
     data_iterator = tf.data.Iterator.from_structure(dataset.output_types, dataset.output_shapes)
@@ -47,6 +40,12 @@ def precompute_train_data(epochs, elements_per_epoch, out_dir, dataset, add_epoc
 
 def precompute_val_data(elements, out_dir,
                         dataset=generator_dataset.get_dataset("val").prefetch(4).map(data_transformation.label_map)):
+    """
+    precomputes validation data
+    :param elements: number of elements to load from dataset
+    :param out_dir: directory to save files to
+    :param dataset: tensorflow dataset to load scenes from
+    """
     sess = tf.Session()
     data_iterator = tf.data.Iterator.from_structure(dataset.output_types, dataset.output_shapes)
     val_data_init = data_iterator.make_initializer(dataset)
@@ -67,6 +66,9 @@ def precompute_val_data(elements, out_dir,
 
 
 def generate_eval_data():
+    """
+    generator which iterates over precomputed validation set and yields single subsets
+    """
     for scene_name in generator_dataset.scene_name_generator("val"):
         print(scene_name)
         points_val, labels_val, colors_val, normals_val = generator_dataset.load_from_scene_name(scene_name)
@@ -81,6 +83,9 @@ def generate_eval_data():
 
 
 def generate_test_data():
+    """
+    generator which iterates over precomputed test set and yields single subsets
+    """
     for scene_name in generator_dataset.scene_name_generator("test"):
         points_val, colors_val, normals_val = generator_dataset.load_from_scene_name_test(scene_name)
         subscenes = data_transformation.get_all_subsets_with_all_points_for_scene_numpy_test(points_val, colors_val,
@@ -92,10 +97,13 @@ def generate_test_data():
 
 
 def eval_dataset_from_generator():
+    """
+    dataset from eval data generator
+    """
     gen = generate_eval_data
     return tf.data.Dataset.from_generator(gen,
-                                          output_types=(
-                                          tf.float32, tf.int32, tf.int32, tf.float32, tf.string, tf.int32, tf.int32),
+                                          output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.string, tf.int32,
+                                                        tf.int32),
                                           output_shapes=(tf.TensorShape([None, 3]), tf.TensorShape([None]),
                                                          tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
                                                          tf.TensorShape([]), tf.TensorShape([None]),
@@ -103,10 +111,13 @@ def eval_dataset_from_generator():
 
 
 def test_dataset_from_generator():
+    """
+    tensorflow dataset from test data generator
+    """
     gen = generate_test_data
     return tf.data.Dataset.from_generator(gen,
-                                          output_types=(
-                                          tf.float32, tf.int32, tf.float32, tf.string, tf.int32, tf.int32),
+                                          output_types=(tf.float32, tf.int32, tf.float32, tf.string, tf.int32,
+                                                        tf.int32),
                                           output_shapes=(tf.TensorShape([None, 3]),
                                                          tf.TensorShape([None, 3]), tf.TensorShape([None, 3]),
                                                          tf.TensorShape([]), tf.TensorShape([None]),
@@ -114,6 +125,9 @@ def test_dataset_from_generator():
 
 
 def precomputed_train_data_generator(dir="/home/tim/data/train_precomputed"):
+    """
+    iterates over precomputed train data and yields single chunks
+    """
     file_list = sorted(os.listdir(dir))
     while True:
         for filename in file_list:
@@ -125,6 +139,9 @@ def precomputed_train_data_generator(dir="/home/tim/data/train_precomputed"):
 
 
 def get_precomputed_train_data_set():
+    """
+    tensorflow dataset from precomputed train data generator
+    """
     gen = precomputed_train_data_generator
     return tf.data.Dataset.from_generator(gen,
                                           output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
@@ -134,6 +151,9 @@ def get_precomputed_train_data_set():
 
 
 def precomputed_val_data_generator(dir="/home/tim/data/val_precomputed"):
+    """
+    iterates over precomputed val data and yields single chunks
+    """
     file_list = sorted(os.listdir(dir))
     while True:
         for filename in file_list:
@@ -145,6 +165,9 @@ def precomputed_val_data_generator(dir="/home/tim/data/val_precomputed"):
 
 
 def get_precomputed_val_data_set():
+    """
+    tensorflow dataset from precomputed val data generator
+    """
     gen = precomputed_val_data_generator
     return tf.data.Dataset.from_generator(gen,
                                           output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
@@ -154,6 +177,9 @@ def get_precomputed_val_data_set():
 
 
 def precomputed_train_subset_data_generator(dir="/home/tim/data/train_subset_precomputed"):
+    """
+    iterates over precomputed subset of train data and yields single chunks
+    """
     file_list = sorted(os.listdir(dir))
     while True:
         for filename in file_list:
@@ -165,6 +191,9 @@ def precomputed_train_subset_data_generator(dir="/home/tim/data/train_subset_pre
 
 
 def get_precomputed_train_subset_data_set():
+    """
+    tensorflow dataset from precomputed subset of train data generator
+    """
     gen = precomputed_train_data_generator
     return tf.data.Dataset.from_generator(gen,
                                           output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
@@ -174,6 +203,9 @@ def get_precomputed_train_subset_data_set():
 
 
 def precomputed_val_subset_data_generator(dir="/home/tim/data/val_precomputed"):
+    """
+    iterates over precomputed subset of val data and yields single chunks
+    """
     file_list = sorted(os.listdir(dir))
     file_list = file_list[:len(file_list) // 3]
     print("val files", len(file_list))
@@ -187,6 +219,9 @@ def precomputed_val_subset_data_generator(dir="/home/tim/data/val_precomputed"):
 
 
 def get_precomputed_val_subset_data_set():
+    """
+    tensorflow dataset from precomputed subset of val data generator
+    """
     gen = precomputed_val_subset_data_generator
     return tf.data.Dataset.from_generator(gen,
                                           output_types=(tf.float32, tf.int32, tf.int32, tf.float32, tf.float32),
@@ -196,15 +231,16 @@ def get_precomputed_val_subset_data_set():
 
 
 def precompute_subset_train_data():
+    """
+    precomputes data from a subset of the scenes in the training set
+    :return:
+    """
     ds = data_transformation.get_transformed_dataset("train_subset").prefetch(4)
     precompute_train_data(100, 1201 // 3, "/home/tim/data/train_subset_precomputed", ds, 0)
     print("done")
 
 
 def main():
-    for i in precomputed_val_subset_data_generator():
-        pass
-
     # debug validation iterator
     sess = tf.Session()
     val_ds = get_precomputed_val_data_set()

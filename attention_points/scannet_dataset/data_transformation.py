@@ -1,3 +1,13 @@
+"""
+This module contains methods to transform the dataset These transformations include:
+ - mapping the labels from nyu40 to range [0, 20]
+ - rotating a point cloud
+ - getting a random chunk of a scene
+ - getting chunks for every area of a scene
+ - getting all points of a scene grouped by chunks
+Some of these methods are implemented in both tensorflow and numpy.
+When executing on CPU the numpy versions are considerably faster.
+"""
 import math
 
 import numpy as np
@@ -8,6 +18,10 @@ from attention_points.scannet_dataset import generator_dataset
 
 
 def label_map(points, labels, colors, normals):
+    """
+    tensorflow function to map labels from nyu40 to range [0, 20]
+    :return: points, mapped labels, colors, normals
+    """
     map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
            33: 17, 34: 18, 36: 19, 39: 20}
     map = tf.convert_to_tensor([map.get(i, 0) for i in range(41)])
@@ -17,6 +31,10 @@ def label_map(points, labels, colors, normals):
 
 
 def label_map_numpy(points, labels, colors, normals):
+    """
+    numpy function to map labels from nyu40 to range [0, 20]
+    :return: points, mapped labels, colors, normals
+    """
     map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
            33: 17, 34: 18, 36: 19, 39: 20}
     map = np.array([map.get(i, 0) for i in range(41)])
@@ -26,28 +44,27 @@ def label_map_numpy(points, labels, colors, normals):
 
 
 def label_map_more_paraemters(labels):
+    """
+    numpy function to map labels from nyu40 to range [0, 20]
+    :return: points, mapped labels, colors, normals
+    """
     map_values = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15,
-                  28: 16,
-                  33: 17, 34: 18, 36: 19, 39: 20}
+                  28: 16, 33: 17, 34: 18, 36: 19, 39: 20}
     mapped_labels = np.array(list(map(lambda label: map_values.get(label, 0), labels)))
     return mapped_labels
 
 
 def get_subset(points, labels, colors, normals):
+    """
+    tensorflow function to get a random chunk of a scene which has exactly 8192 points
+    :return: points, labels, colors, normals, sample_weight
+    """
     npoints = 8192
-    # label_weights = tf.ones(21)  # TODO verify following weights
-    # weights as from Qi
-    # label_weights = tf.constant([3.8175557, 2.2230785, 2.6964862, 4.546552, 4.9208603, 5.0999, 4.9115996,
-    #                              5.02148, 4.9090133, 5.4020867, 5.401546, 5.4178405, 5.1401854, 5.332984,
-    #                              4.9614744, 5.259515, 5.439167, 5.3803735, 5.393622, 4.909173, 4.9360685])
-    # weights as from Qi, but unlabeled is set to 0
-    # label_weights = tf.constant([0.0, 2.2230785, 2.6964862, 4.546552, 4.9208603, 5.0999, 4.9115996,
-    #                              5.02148, 4.9090133, 5.4020867, 5.401546, 5.4178405, 5.1401854, 5.332984,
-    #                              4.9614744, 5.259515, 5.439167, 5.3803735, 5.393622, 4.909173, 4.9360685])
-    # weights according to relative frequency
-    label_weights = [0.19046473, 0.19851674, 0.26001881, 1.47028394, 2.20662599, 0.8361011, 2.44105334, 1.68711097,
-                     1.31890131, 1.53009846, 2.52134974, 12.23860205, 12.43519999, 3.10312617, 2.75629355, 11.50115691,
-                     18.97644886, 19.06070615, 23.11972616, 17.47745665, 1.70481293]
+    label_weights = [0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
+                     4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025, 4.809412839311939,
+                     5.052097251455304, 5.389129668645318, 5.390614085649042, 5.127458225110977, 5.086056870814752,
+                     5.3831185190895265, 5.422684124268539, 5.422955391988761, 5.433705358072363, 5.417426773812747,
+                     4.870172044153657]
 
     coordmax = tf.reduce_max(points, axis=0)
     coordmin = tf.reduce_min(points, axis=0)
@@ -119,8 +136,13 @@ def get_subset(points, labels, colors, normals):
 
 
 def get_all_subsets_for_scene(points, labels, colors, normals):
+    """
+    tensorflow function to get chunks for every area of a scene
+    warning: this method is not tested yet -> use with care
+    :return: points_stack, labels_stack, colors_stack, normals_stack, sample_weight_stack
+    """
     npoints = 8192
-    label_weights = tf.ones(21)  # TODO set weights accordingly
+    label_weights = tf.ones(21)  # For validation the weights keep all equal
 
     points_stack = tf.zeros([0, npoints, 3], dtype=tf.float32)
     labels_stack = tf.zeros([0, npoints], dtype=tf.int32)
@@ -219,6 +241,11 @@ def get_all_subsets_for_scene(points, labels, colors, normals):
 
 
 def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
+    """
+    numpy function to get chunks for every area of a scene
+    this method is derived from Charles Qi's implementation
+    :return: points_stack, labels_stack, colors_stack, normals_stack, sample_weight_stack
+    """
     npoints = 8192
     label_weights = np.ones(21)
     label_weights[0] = 0
@@ -269,6 +296,12 @@ def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
 
 
 def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, normals):
+    """
+    numpy function to get all points of a scene grouped by chunks
+    this method can be used to get values for all points of a scene e.g. the test set
+    it also returns the original indices of all samples to map values or predictions back to original points
+    :return: point_sets, semantic_segs, colors_sets, normals_sets, sample_weights, masks_sets, points_orig_idxs_sets
+    """
     npoints = 8192
     label_weights = np.ones(21)
     label_weights[0] = 0
@@ -302,7 +335,7 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             cur_normals = normals[curchoice]
             cur_points_orig_idxs = points_orig_idxs[curchoice]
             if len(cur_semantic_seg) == 0:
-                #print('empty subset')
+                # print('empty subset')
                 continue
             mask = np.sum((cur_point_set >= curmin) * (cur_point_set <= curmax), axis=1) == 3
             mask_counter += np.sum(mask)
@@ -319,7 +352,7 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             assert len(cur_point_set) == len(cur_semantic_seg)
             assert len(cur_point_set) == len(mask)
             assert len(cur_point_set) == len(cur_points_orig_idxs)
-            #print("number of unique point ids %s" % len(np.unique(cur_points_orig_idxs)))
+            # print("number of unique point ids %s" % len(np.unique(cur_points_orig_idxs)))
 
             k = 0
             for k in range(int(len(cur_point_set) / 8192)):
@@ -331,7 +364,7 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
                 mask_cur = mask[offset:offset + 8192]
                 points_orig_idxs_cur = cur_points_orig_idxs[offset:offset + 8192]
                 if sum(mask_cur) == 0:  # TODO: why is len(mask) often Zero? --> remove the len(mask) == 0
-                    #print("oh no aaa!!")
+                    # print("oh no aaa!!")
                     continue
                 sample_weight = label_weights[semantic_seg]
                 sample_weight *= mask_cur  # N
@@ -348,12 +381,12 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
 
             ### Only for the rest all again
             if len(cur_point_set) > 8192:
-                #print("rest %s " % rest_idxs)
+                # print("rest %s " % rest_idxs)
                 k = k + 1
             offset = k * 8192
             # add random points of this "subset-frame" to fill up to 8192 (predictions for them get removed through masking)
             fill_up_idxs = np.random.choice(len(cur_point_set), 8192 - rest_idxs, replace=True)
-            #fill_up_idxs = np.ones(8192-rest_idxs, dtype=np.int32)
+            # fill_up_idxs = np.ones(8192-rest_idxs, dtype=np.int32)
             point_set = np.concatenate(
                 (cur_point_set[offset:offset + rest_idxs], np.array(cur_point_set)[fill_up_idxs]))
             normal_cur = np.concatenate((cur_normals[offset:offset + rest_idxs], np.array(cur_normals)[fill_up_idxs]))
@@ -365,7 +398,7 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             points_orig_idxs_cur = np.concatenate(
                 (cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=int)))
             if sum(mask_cur) == 0:
-                #print("oh no!")
+                # print("oh no!")
                 continue
             sample_weight = label_weights[semantic_seg]
             point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
@@ -378,8 +411,6 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             points_orig_idxs_sets.append(np.expand_dims(points_orig_idxs_cur, 0))
             ### END: Only for the rest all again
 
-
-
     print("mask counter should be all points %s" % mask_counter)
     print("number of points now: %s" % len(np.unique(np.column_stack(tuple(points_orig_idxs_sets)))))
     point_sets = np.concatenate(tuple(point_sets), axis=0)
@@ -391,7 +422,17 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
     points_orig_idxs_sets = np.concatenate(tuple(points_orig_idxs_sets), axis=0)
     return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights, masks_sets, points_orig_idxs_sets
 
+
 def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals):
+    """
+    numpy function to get all points of a scene grouped by chunks
+    this method can be used to get values for all points of a scene e.g. the test set
+    it also returns the original indices of all samples to map values or predictions back to original points
+
+    same as above, but does not return labels # TODO refactor this method and the method above
+
+    :return: point_sets, colors_sets, normals_sets, masks_sets, points_orig_idxs_sets
+    """
     npoints = 8192
     label_weights = np.ones(21)
     label_weights[0] = 0
@@ -422,7 +463,7 @@ def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals
             cur_normals = normals[curchoice]
             cur_points_orig_idxs = points_orig_idxs[curchoice]
             if len(cur_point_set) == 0:
-                #print('empty subset')
+                # print('empty subset')
                 continue
             mask = np.sum((cur_point_set >= curmin) * (cur_point_set <= curmax), axis=1) == 3
             mask_counter += np.sum(mask)
@@ -437,7 +478,7 @@ def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals
             assert len(cur_point_set) == len(cur_colors)
             assert len(cur_point_set) == len(mask)
             assert len(cur_point_set) == len(cur_points_orig_idxs)
-            #print("number of unique point ids %s" % len(np.unique(cur_points_orig_idxs)))
+            # print("number of unique point ids %s" % len(np.unique(cur_points_orig_idxs)))
 
             k = 0
             for k in range(int(len(cur_point_set) / 8192)):
@@ -448,7 +489,7 @@ def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals
                 mask_cur = mask[offset:offset + 8192]
                 points_orig_idxs_cur = cur_points_orig_idxs[offset:offset + 8192]
                 if sum(mask_cur) == 0:  # TODO: why is len(mask) often Zero? --> remove the len(mask) == 0
-                    #print("oh no aaa!!")
+                    # print("oh no aaa!!")
                     continue
                 point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
                 colors_sets.append(np.expand_dims(color_cur, 0))
@@ -461,12 +502,12 @@ def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals
 
             ### Only for the rest all again
             if len(cur_point_set) > 8192:
-                #print("rest %s " % rest_idxs)
+                # print("rest %s " % rest_idxs)
                 k = k + 1
             offset = k * 8192
             # add random points of this "subset-frame" to fill up to 8192 (predictions for them get removed through masking)
             fill_up_idxs = np.random.choice(len(cur_point_set), 8192 - rest_idxs, replace=True)
-            #fill_up_idxs = np.ones(8192-rest_idxs, dtype=np.int32)
+            # fill_up_idxs = np.ones(8192-rest_idxs, dtype=np.int32)
             point_set = np.concatenate(
                 (cur_point_set[offset:offset + rest_idxs], np.array(cur_point_set)[fill_up_idxs]))
             normal_cur = np.concatenate((cur_normals[offset:offset + rest_idxs], np.array(cur_normals)[fill_up_idxs]))
@@ -476,7 +517,7 @@ def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals
             points_orig_idxs_cur = np.concatenate(
                 (cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=int)))
             if sum(mask_cur) == 0:
-                #print("oh no!")
+                # print("oh no!")
                 continue
             point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
             colors_sets.append(np.expand_dims(color_cur, 0))
@@ -485,8 +526,6 @@ def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals
                 np.expand_dims(mask_cur, 0))  # needed to ignore predictions of points outside of the actual cube
             points_orig_idxs_sets.append(np.expand_dims(points_orig_idxs_cur, 0))
             ### END: Only for the rest all again
-
-
 
     print("mask counter should be all points %s" % mask_counter)
     print("number of points now: %s" % len(np.unique(np.column_stack(tuple(points_orig_idxs_sets)))))
@@ -497,7 +536,12 @@ def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals
     points_orig_idxs_sets = np.concatenate(tuple(points_orig_idxs_sets), axis=0)
     return point_sets, colors_sets, normals_sets, masks_sets, points_orig_idxs_sets
 
+
 def random_rotate(points, labels, colors, normals, sample_weight):
+    """
+    tensorflow function to randomly rotate point cloud
+    :return: rotated points, labels, colors, rot_normals, sample_weight
+    """
     alpha = tf.random_uniform([], 0, math.pi * 2)
     rot_matrix = tf.convert_to_tensor(
         [[tf.cos(alpha), -tf.sin(alpha), 0], [tf.sin(alpha), tf.cos(alpha), 0], [0, 0, 1]])
@@ -507,6 +551,10 @@ def random_rotate(points, labels, colors, normals, sample_weight):
 
 
 def get_transformed_dataset(train, prefetch=True):
+    """
+    tensorflow dataset, to load and transform files asynchronous
+    :return:
+    """
     ds = gd.get_dataset(train)
     if prefetch:
         # prefetch loading from disk
@@ -523,18 +571,18 @@ def get_transformed_dataset(train, prefetch=True):
 
 
 def map_back(values, original_idx, mask, res_shape):
+    """
+    this method allows to map values with given indices back to their initial order
+    """
     print("len mask:", len(mask), "len values", len(values), "len original idx", len(original_idx))
     values = values[mask]
     id_unique = len(np.unique(original_idx))
     print("unique point ids: %s" % id_unique)
     original_idx = original_idx[mask]
-    #a = np.max(original_idx)
-
-
     res = np.ones(res_shape) * -666
-    #for id in original_idx:
+    # for id in original_idx:
     #    res[id] = values[id] # TODO I think this -1 here is not correct, but it fixes the problem
-    #print(np.where(res == -666))
+    # print(np.where(res == -666))
     res[original_idx] = values
     return res
 
@@ -556,11 +604,12 @@ if __name__ == '__main__':
         restored_points = map_back(points, points_orig_idxs, masks, points_orig.shape)
         print("original points", points_orig.shape)
         print("restored points", restored_points.shape, restored_points)
-        print("unchanged values", np.sum(restored_points == -666)/3, "total values",
-              np.sum(np.ones_like(restored_points))/3)
+        print("unchanged values", np.sum(restored_points == -666) / 3, "total values",
+              np.sum(np.ones_like(restored_points)) / 3)
 
         for i in range(len(points_orig)):
-            if(points_orig[i][0] != restored_points[i][0] and points_orig[i][1] != restored_points[i][1] and points_orig[i][2] != restored_points[i][2]):
+            if (points_orig[i][0] != restored_points[i][0] and points_orig[i][1] != restored_points[i][1] and
+                    points_orig[i][2] != restored_points[i][2]):
                 print("restored is not equal %s" % i)
         break
     exit(0)

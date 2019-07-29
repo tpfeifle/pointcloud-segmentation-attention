@@ -1,3 +1,7 @@
+"""
+this script extracts training scores from tensorboard logs and plots them in matplotlib
+"""
+import matplotlib.pyplot as plt
 import tensorflow as tf
 
 event_files = ['/home/tim/training_log/subset/baseline1563868622_val/events.out.tfevents.1563868758.tim-desktop',
@@ -12,7 +16,6 @@ titles = ['Baseline',
           'Att-Layer-4']
 
 DEBUG_MODE = False
-import matplotlib.pyplot as plt
 
 
 def load_scores(events, event_title):
