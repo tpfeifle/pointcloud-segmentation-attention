@@ -6,19 +6,37 @@ import importlib
 import pickle
 import os
 import time
+import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 N_POINTS = 8192
 N_TRAIN_SAMPLES = 1201
 N_VAL_SAMPLES = 312
 MODEL = importlib.import_module("models.pointnet2_sem_seg")
-LOG_DIR = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/log/tim/pointnet_%s' % int(time.time()))
+MODEL_WITH_COLOR = importlib.import_module("color_scannet.models.pointnet2_color")
+LOG_DIR = os.path.join('/tmp/pycharm_project_250/pointnet2_tensorflow/log/iou/both_%s' % int(time.time()))
+
+TRAIN_COLOR = True
+
+def plot_confusion_matrix(df_confusion, title='Confusion matrix', cmap="Greys"):
+    plt.matshow(df_confusion, cmap=cmap)  # imshow
+    # plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(df_confusion.columns))
+    plt.xticks(tick_marks, df_confusion.columns, rotation=45)
+    plt.yticks(tick_marks, df_confusion.index)
+    # plt.tight_layout()
+    plt.ylabel(df_confusion.index.name)
+    plt.xlabel(df_confusion.columns.name)
+    plt.show()
 
 
-def train(epochs=1000, batch_size=8, n_epochs_to_val=4):
+
+def train(epochs=1000, batch_size=20, n_epochs_to_val=4):
     tf.Graph().as_default()
     tf.device('/gpu:0')
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
     sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
     # define train
     train_data = data_transformation.get_transformed_dataset("train")
@@ -26,8 +44,8 @@ def train(epochs=1000, batch_size=8, n_epochs_to_val=4):
     train_iterator = tf.data.Iterator.from_structure(train_data.output_types, train_data.output_shapes)
     train_data_init = train_iterator.make_initializer(train_data)
     sess.run(train_data_init)
-    points, labels, colors, normals, sample_weight = train_iterator.get_next()
-    train_features = tf.concat([tf.cast(colors, tf.float32), normals], 0)
+    points, labels, colors, train_normals, sample_weight = train_iterator.get_next()
+    train_features = tf.concat([tf.cast(colors, tf.float32), train_normals], 2)
     train_coordinates = points
     train_labels = labels
     train_sample_weight = sample_weight
@@ -51,7 +69,10 @@ def train(epochs=1000, batch_size=8, n_epochs_to_val=4):
     # model = AttentionNetModel(is_training=is_training_pl, bn_decay=None, num_class=21)
 
     # train_pred = model(train_coordinates)
-    train_pred, _ = MODEL.get_model(train_coordinates, is_training_pl, 21)
+    if TRAIN_COLOR:
+        train_pred, _ = MODEL_WITH_COLOR.get_model(train_coordinates, train_normals, is_training_pl, 21)
+    else:
+        train_pred, _ = MODEL.get_model(train_coordinates, is_training_pl, 21)
     train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred,
                                                         weights=train_sample_weight)
 
@@ -72,6 +93,9 @@ def train(epochs=1000, batch_size=8, n_epochs_to_val=4):
     sess.run(variable_init)
     sess.run(tf.local_variables_initializer())
 
+    tf.summary.scalar('accuracy', train_acc)
+    tf.summary.scalar('loss', train_loss)
+    tf.summary.scalar('iou', train_iou)
     batches_per_epoch = N_TRAIN_SAMPLES / batch_size
     # batches_per_epoch = 2
     print(f"batches per epoch: {batches_per_epoch}")
@@ -79,30 +103,44 @@ def train(epochs=1000, batch_size=8, n_epochs_to_val=4):
     assign_op = is_training_pl.assign(True)
     sess.run(assign_op)
     print(tf.trainable_variables())
+
+    # initialize lists for confusion matrices
+    pred_list = []
+    label_list = []
     for i in range(int(epochs * batches_per_epoch)):
         epoch = int((i + 1) / batches_per_epoch) + 1
 
-        tf.summary.scalar('accuracy', train_acc)
-        tf.summary.scalar('loss', train_loss)
-        tf.summary.scalar('iou', train_iou)
         merged = tf.summary.merge_all()
 
-        _, loss_val, acc_val, pred, batch_data, iou, asdf, merged = sess.run([train_op, train_loss, train_acc, train_pred, points, train_iou, conf_mat, merged])
+        # _, loss_val, acc_val, pred, batch_data, iou, asdf, merged = sess.run([train_op, train_loss, train_acc, train_pred, points, train_iou, conf_mat, merged])
+        # extract labels and predictions
+        _, loss_val, acc_val, pred_val, labels_val, iou, _, merged_val = sess.run(
+            [train_op, train_loss, train_acc, train_pred, train_labels, train_iou, conf_mat, merged])
         import numpy as np
-        pred = np.argmax(pred, 2)
+        pred = np.argmax(pred_val, 2)
         acc_sum += acc_val
         loss_sum += loss_val
         print(f"\tbatch {(i + 1) % int(batches_per_epoch)}\tloss: {loss_val}, \taccuracy: {acc_val}, \t iou: {iou}")
-        train_writer.add_summary(merged, i)
-        '''if (i + 1) % int(batches_per_epoch) == 0 or True:
-            outfile = '/tmp/pycharm_project_250/to_visualize_pointnet.pickle'
-            with open(outfile, 'wb') as fp:
-                pickle.dump(batch_data, fp)
-                pickle.dump(pred, fp)
+        train_writer.add_summary(merged_val, i)
+        # save values for confusion matrix for every batch
+        pred_list += list(np.argmax(pred_val, axis=-1).flatten())
+        label_list += list(labels_val.flatten())
+        if (i + 1) % 1 == 0: # int(batches_per_epoch) == 0 or True:
+            # compute conf matrix after epoch finishes
+            y_pred = pd.Series(pred_list, name='Predicted')
+            y_actu = pd.Series(label_list, name='Actual')
+            df_confusion = pd.crosstab(y_actu, y_pred, margins=True)
+            # df_confusion = df_confusion / df_confusion.sum(axis=1)
+            print(df_confusion)
+            df_confusion = df_confusion / np.sum(df_confusion)
+            # plot_confusion_matrix(np.log(df_confusion))
+            plot_confusion_matrix(df_confusion)
+            pred_list, label_list = [], []
 
             print(f"epoch {epoch} finished")
             # epoch summary
             print(f"mean acc: {acc_sum / batches_per_epoch} \tmean loss: {loss_sum / batches_per_epoch}")
+            '''
             acc_sum, loss_sum = 0, 0
             if epoch % n_epochs_to_val == 0 and False:
                 assign_op = is_training_pl.assign(False)

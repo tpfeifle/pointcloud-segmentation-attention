@@ -292,6 +292,7 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
     normals_sets = []
     masks_sets = []
     points_orig_idxs_sets = []
+    mask_counter = 0
     for i in range(nsubvolume_x):
         for j in range(nsubvolume_y):
             curmin = coordmin + [i * 1.5, j * 1.5, 0]
@@ -303,8 +304,10 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             cur_normals = normals[curchoice]
             cur_points_orig_idxs = points_orig_idxs[curchoice]
             if len(cur_semantic_seg) == 0:
+                #print('empty subset')
                 continue
             mask = np.sum((cur_point_set >= curmin) * (cur_point_set <= curmax), axis=1) == 3
+            mask_counter += np.sum(mask)
             # choice = np.random.choice(len(cur_semantic_seg), npoints, replace=True)
             # 1. Shuffle points in cur_point_set and keep mapping to original
             cur_point_set, order_to_inverse_shuffle = shuffle_forward(cur_point_set)
@@ -318,6 +321,8 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             assert len(cur_point_set) == len(cur_semantic_seg)
             assert len(cur_point_set) == len(mask)
             assert len(cur_point_set) == len(cur_points_orig_idxs)
+            #print("number of unique point ids %s" % len(np.unique(cur_points_orig_idxs)))
+
             k = 0
             for k in range(int(len(cur_point_set) / 8192)):
                 offset = k * 8192
@@ -328,8 +333,7 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
                 mask_cur = mask[offset:offset + 8192]
                 points_orig_idxs_cur = cur_points_orig_idxs[offset:offset + 8192]
                 if sum(mask_cur) == 0:  # TODO: why is len(mask) often Zero? --> remove the len(mask) == 0
-                    print("oh no!!")
-                    print(len(mask_cur))
+                    #print("oh no aaa!!")
                     continue
                 sample_weight = label_weights[semantic_seg]
                 sample_weight *= mask_cur  # N
@@ -345,9 +349,13 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             rest_idxs = len(cur_point_set) % 8192
 
             ### Only for the rest all again
+            if len(cur_point_set) > 8192:
+                #print("rest %s " % rest_idxs)
+                k = k + 1
             offset = k * 8192
             # add random points of this "subset-frame" to fill up to 8192 (predictions for them get removed through masking)
             fill_up_idxs = np.random.choice(len(cur_point_set), 8192 - rest_idxs, replace=True)
+            #fill_up_idxs = np.ones(8192-rest_idxs, dtype=np.int32)
             point_set = np.concatenate(
                 (cur_point_set[offset:offset + rest_idxs], np.array(cur_point_set)[fill_up_idxs]))
             normal_cur = np.concatenate((cur_normals[offset:offset + rest_idxs], np.array(cur_normals)[fill_up_idxs]))
@@ -357,13 +365,11 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             # filter the added points out when saving predictions (so make them zero in the mask)
             mask_cur = np.concatenate((mask[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=bool)))
             points_orig_idxs_cur = np.concatenate(
-                (cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=int) - 1))
+                (cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=int)))
             if sum(mask_cur) == 0:
-                print("oh no!")
-                print(len(mask_cur))
+                #print("oh no!")
                 continue
             sample_weight = label_weights[semantic_seg]
-            # sample_weight *= mask  # N TODO: see above
             point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
             semantic_segs.append(np.expand_dims(semantic_seg, 0))  # 1xN
             sample_weights.append(np.expand_dims(sample_weight, 0))  # 1xN
@@ -374,6 +380,10 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
             points_orig_idxs_sets.append(np.expand_dims(points_orig_idxs_cur, 0))
             ### END: Only for the rest all again
 
+
+
+    print("mask counter should be all points %s" % mask_counter)
+    print("number of points now: %s" % len(np.unique(np.column_stack(tuple(points_orig_idxs_sets)))))
     point_sets = np.concatenate(tuple(point_sets), axis=0)
     semantic_segs = np.concatenate(tuple(semantic_segs), axis=0)
     sample_weights = np.concatenate(tuple(sample_weights), axis=0)
@@ -383,6 +393,111 @@ def get_all_subsets_with_all_points_for_scene_numpy(points, labels, colors, norm
     points_orig_idxs_sets = np.concatenate(tuple(points_orig_idxs_sets), axis=0)
     return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights, masks_sets, points_orig_idxs_sets
 
+def get_all_subsets_with_all_points_for_scene_numpy_test(points, colors, normals):
+    npoints = 8192
+    label_weights = np.ones(21)
+    label_weights[0] = 0
+    points_orig_idxs = np.arange(len(points), dtype=int)
+
+    def shuffle_forward(l):
+        order = list(range(len(l)))
+        np.random.shuffle(order)
+        return list(np.array(l)[order]), order
+
+    coordmax = np.max(points, axis=0)
+    coordmin = np.min(points, axis=0)
+    nsubvolume_x = np.ceil((coordmax[0] - coordmin[0]) / 1.5).astype(np.int32)
+    nsubvolume_y = np.ceil((coordmax[1] - coordmin[1]) / 1.5).astype(np.int32)
+    point_sets = []
+    colors_sets = []
+    normals_sets = []
+    masks_sets = []
+    points_orig_idxs_sets = []
+    mask_counter = 0
+    for i in range(nsubvolume_x):
+        for j in range(nsubvolume_y):
+            curmin = coordmin + [i * 1.5, j * 1.5, 0]
+            curmax = coordmin + [(i + 1) * 1.5, (j + 1) * 1.5, coordmax[2] - coordmin[2]]
+            curchoice = np.sum((points >= (curmin - 0.2)) * (points <= (curmax + 0.2)), axis=1) == 3
+            cur_point_set = points[curchoice]
+            cur_colors = colors[curchoice]
+            cur_normals = normals[curchoice]
+            cur_points_orig_idxs = points_orig_idxs[curchoice]
+            if len(cur_point_set) == 0:
+                #print('empty subset')
+                continue
+            mask = np.sum((cur_point_set >= curmin) * (cur_point_set <= curmax), axis=1) == 3
+            mask_counter += np.sum(mask)
+            # choice = np.random.choice(len(cur_semantic_seg), npoints, replace=True)
+            # 1. Shuffle points in cur_point_set and keep mapping to original
+            cur_point_set, order_to_inverse_shuffle = shuffle_forward(cur_point_set)
+            cur_normals = cur_normals[order_to_inverse_shuffle]
+            cur_colors = cur_colors[order_to_inverse_shuffle]
+            mask = mask[order_to_inverse_shuffle]
+            cur_points_orig_idxs = cur_points_orig_idxs[order_to_inverse_shuffle]
+            assert len(cur_point_set) == len(cur_normals)
+            assert len(cur_point_set) == len(cur_colors)
+            assert len(cur_point_set) == len(mask)
+            assert len(cur_point_set) == len(cur_points_orig_idxs)
+            #print("number of unique point ids %s" % len(np.unique(cur_points_orig_idxs)))
+
+            k = 0
+            for k in range(int(len(cur_point_set) / 8192)):
+                offset = k * 8192
+                point_set = cur_point_set[offset:offset + 8192]
+                normal_cur = cur_normals[offset:offset + 8192]
+                color_cur = cur_colors[offset:offset + 8192]
+                mask_cur = mask[offset:offset + 8192]
+                points_orig_idxs_cur = cur_points_orig_idxs[offset:offset + 8192]
+                if sum(mask_cur) == 0:  # TODO: why is len(mask) often Zero? --> remove the len(mask) == 0
+                    #print("oh no aaa!!")
+                    continue
+                point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
+                colors_sets.append(np.expand_dims(color_cur, 0))
+                normals_sets.append(np.expand_dims(normal_cur, 0))
+                masks_sets.append(
+                    np.expand_dims(mask_cur, 0))  # needed to ignore predictions of points outside of the actual cube
+                points_orig_idxs_sets.append(np.expand_dims(points_orig_idxs_cur, 0))
+
+            rest_idxs = len(cur_point_set) % 8192
+
+            ### Only for the rest all again
+            if len(cur_point_set) > 8192:
+                #print("rest %s " % rest_idxs)
+                k = k + 1
+            offset = k * 8192
+            # add random points of this "subset-frame" to fill up to 8192 (predictions for them get removed through masking)
+            fill_up_idxs = np.random.choice(len(cur_point_set), 8192 - rest_idxs, replace=True)
+            #fill_up_idxs = np.ones(8192-rest_idxs, dtype=np.int32)
+            point_set = np.concatenate(
+                (cur_point_set[offset:offset + rest_idxs], np.array(cur_point_set)[fill_up_idxs]))
+            normal_cur = np.concatenate((cur_normals[offset:offset + rest_idxs], np.array(cur_normals)[fill_up_idxs]))
+            color_cur = np.concatenate((cur_colors[offset:offset + rest_idxs], np.array(cur_colors)[fill_up_idxs]))
+            # filter the added points out when saving predictions (so make them zero in the mask)
+            mask_cur = np.concatenate((mask[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=bool)))
+            points_orig_idxs_cur = np.concatenate(
+                (cur_points_orig_idxs[offset:offset + rest_idxs], np.zeros(8192 - rest_idxs, dtype=int)))
+            if sum(mask_cur) == 0:
+                #print("oh no!")
+                continue
+            point_sets.append(np.expand_dims(point_set, 0))  # 1xNx3
+            colors_sets.append(np.expand_dims(color_cur, 0))
+            normals_sets.append(np.expand_dims(normal_cur, 0))
+            masks_sets.append(
+                np.expand_dims(mask_cur, 0))  # needed to ignore predictions of points outside of the actual cube
+            points_orig_idxs_sets.append(np.expand_dims(points_orig_idxs_cur, 0))
+            ### END: Only for the rest all again
+
+
+
+    print("mask counter should be all points %s" % mask_counter)
+    print("number of points now: %s" % len(np.unique(np.column_stack(tuple(points_orig_idxs_sets)))))
+    point_sets = np.concatenate(tuple(point_sets), axis=0)
+    colors_sets = np.concatenate(tuple(colors_sets), axis=0)
+    normals_sets = np.concatenate(tuple(normals_sets), axis=0)
+    masks_sets = np.concatenate(tuple(masks_sets), axis=0)
+    points_orig_idxs_sets = np.concatenate(tuple(points_orig_idxs_sets), axis=0)
+    return point_sets, colors_sets, normals_sets, masks_sets, points_orig_idxs_sets
 
 def random_rotate(points, labels, colors, normals, sample_weight):
     alpha = tf.random_uniform([], 0, math.pi * 2)
@@ -412,9 +527,16 @@ def get_transformed_dataset(train, prefetch=True):
 def map_back(values, original_idx, mask, res_shape):
     print("len mask:", len(mask), "len values", len(values), "len original idx", len(original_idx))
     values = values[mask]
+    id_unique = len(np.unique(original_idx))
+    print("unique point ids: %s" % id_unique)
     original_idx = original_idx[mask]
+    #a = np.max(original_idx)
+
 
     res = np.ones(res_shape) * -666
+    #for id in original_idx:
+    #    res[id] = values[id] # TODO I think this -1 here is not correct, but it fixes the problem
+    #print(np.where(res == -666))
     res[original_idx] = values
     return res
 
@@ -430,10 +552,18 @@ if __name__ == '__main__':
         masks = masks.flatten()
         points_orig_idxs = points_orig_idxs.flatten()
 
+        print("found it at %s" % np.where(points_orig_idxs == 14493))
+        print(len(np.unique(points_orig_idxs)))
+
         restored_points = map_back(points, points_orig_idxs, masks, points_orig.shape)
+        print("original points", points_orig.shape)
         print("restored points", restored_points.shape, restored_points)
-        print("unchanged values", np.sum(restored_points == -666), "total values",
-              np.sum(np.ones_like(restored_points)))
+        print("unchanged values", np.sum(restored_points == -666)/3, "total values",
+              np.sum(np.ones_like(restored_points))/3)
+
+        for i in range(len(points_orig)):
+            if(points_orig[i][0] != restored_points[i][0] and points_orig[i][1] != restored_points[i][1] and points_orig[i][2] != restored_points[i][2]):
+                print("restored is not equal %s" % i)
         break
     exit(0)
     ds = gd.get_dataset("val")

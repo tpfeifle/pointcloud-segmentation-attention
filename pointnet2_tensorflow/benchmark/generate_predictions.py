@@ -6,7 +6,7 @@ from scannet import pc_util
 from benchmark import util_3d
 
 N_POINTS = 8192
-N_VAL_SAMPLES = 4542
+N_VAL_SAMPLES = 20000
 BATCH_SIZE = 1
 
 def normalize_features_fixed(x, current_range):
@@ -16,11 +16,30 @@ def normalize_features_fixed(x, current_range):
     x_normed = x_normed * (normed_max - normed_min) + normed_min
     return x_normed
 
-def shuffle_backward(l, order):
-    l_out = [0] * len(l)
-    for k, j in enumerate(order):
-        l_out[j] = l[k]
-    return l_out
+def map_back(values, original_idx, mask, res_shape):
+    print("len mask:", len(mask), "len values", len(values), "len original idx", len(original_idx))
+    values = np.array(values)
+    values = values[mask]
+    id_unique = len(np.unique(original_idx))
+    print("unique point ids: %s" % id_unique)
+    original_idx = original_idx[mask]
+
+    res = np.zeros(res_shape)
+    #for id in original_idx:
+    #    res[id] = values[id-1] # TODO I think this -1 here is not correct, but it fixes the problem
+    res[original_idx] = values
+    #print(np.where(res == -2))
+    return res
+
+def map_to_nyu40(labels):
+    labels = np.array(labels)
+    nyu40_labels = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 13: 14, 14: 16, 15: 24, 16: 28,
+           17: 33, 18: 34, 19: 36, 20: 39}
+    #nyu40_labels_map = np.array([nyu40_labels.get(i, 0) for i in range(41)])
+    #labels = np.minimum(labels, 40)
+    for i in range(len(labels)):
+        labels[i] = nyu40_labels.get(labels[i], 1)
+    return labels
 
 def train(batch_size=BATCH_SIZE):
     tf.Graph().as_default()
@@ -38,9 +57,8 @@ def train(batch_size=BATCH_SIZE):
     sess.run(val_data_init)
     points, labels, colors, normals, scene_name, mask, points_orig_idxs = val_iterator.get_next()
     colors = tf.div(tf.cast(colors, tf.float32), tf.constant(255, dtype=tf.float32))
-    # val_features = tf.concat([tf.cast(colors, tf.float32), normals], 2)
-    val_features = tf.concat([normalize_features_fixed(tf.cast(colors, tf.float32), [0, 255]),
-                                      normalize_features_fixed(normals, [-1, 1])], 2)
+    val_features = tf.concat([tf.cast(colors, tf.float32), normals], 2)
+    #val_features = tf.cast(colors, tf.float32) only for colors
     val_coordinates = points
     val_labels = labels
 
@@ -70,61 +88,90 @@ def train(batch_size=BATCH_SIZE):
 
     sess.run(variable_init)
     sess.run(tf.local_variables_initializer())
-    #saver = tf.train.Saver()
-    #get_checkpoint = tf.train.latest_checkpoint("/home/tim/training_log/pointnet_and_features/long_run1563786310_continued_train")
-    #saver.restore(sess, get_checkpoint)
+    saver = tf.train.Saver()
+    get_checkpoint = tf.train.latest_checkpoint("/home/tim/training_log/pointnet_and_features/long_run1563786310_continued_train")
+    #get_checkpoint = tf.train.latest_checkpoint("/home/tim/training_log/baseline/color_test_run_1563999967_train")
+    #get_checkpoint = tf.train.latest_checkpoint("/home/tim/training_log/baseline/long_run1563533884_train")
+    saver.restore(sess, get_checkpoint)
 
     val_batches = N_VAL_SAMPLES // BATCH_SIZE
-    print(f"starting evaluation {val_batches} batches")
+    print(f"starting evaluation all batches")
     all_pred = []
     all_labels = []
     all_points = []
+    all_masks = []
+    all_points_orig_idxs = []
     current_scene = ""
-    for j in range(val_batches):
-        predictions_res, labels_res, points_res, scene, thefeatures, acc_train, train_iou_val, colorres, pointerres_orig, maskerrades = sess.run([val_pred, val_labels, val_coordinates, scene_name, val_features, val_acc, val_iou, colors, points_orig_idxs, mask])
+    while True:
+        try:
+            predictions_res_temp, labels_res, points_res, scene, thefeatures, acc_train, train_iou_val, colorres, pointerres_orig, maskerrades = sess.run([val_pred, val_labels, val_coordinates, scene_name, val_features, val_acc, val_iou, colors, points_orig_idxs, mask])
 
-        #remove unused single batch dimension
-        predictions_res = np.squeeze(predictions_res)
-        points_res = np.squeeze(points_res)
-        val_labels = np.squeeze(val_labels)
-        pointerres_orig = np.squeeze(pointerres_orig)
-        maskerrades = np.squeeze(maskerrades)
-
-        # inverse shuffling from generator
-        max_pred = np.argmax(predictions_res, axis=1)
-        max_pred = shuffle_backward(max_pred, reorderres)
-        points_res = shuffle_backward(points_res, reorderres)
-        max_pred = max_pred[:, maskerrades]
-        points_res = points_res[:, maskerrades]
+            # remove unused single batch dimension
+            predictions_res = np.squeeze(predictions_res_temp)
+            max_pred = np.argmax(predictions_res, axis=1)
+            points_res = np.squeeze(points_res)
+            labels_res = np.squeeze(labels_res)
+            pointerres_orig = np.squeeze(pointerres_orig)
+            maskerrades = np.squeeze(maskerrades)
 
 
 
-        print(f"\taccuracy: {acc_train:.4f}\taccumulated iou: {train_iou_val:.4f}")
-        if scene != current_scene and j != 0:
-            print("got all for one scene so please evaluate this scene")
-            all_points = np.concatenate(all_points)
-            all_pred = np.concatenate(all_pred)
-            # pc_util.draw_point_cloud(all_points)
-            np.save("/home/tim/results/temp/features2_points_%s.npy" % scene[0].decode('ascii'), all_points)
-            np.save("/home/tim/results/temp/features2_colors_%s.npy" % scene[0].decode('ascii'), all_pred)
-            output_predictions = "/home/tim/results/predictions/%s.txt" % scene[0].decode('ascii')
-            util_3d.export_ids(output_predictions, all_pred)
-            #image1 = pc_util.point_cloud_three_views(all_points)
-            #img = Image.fromarray(np.uint8(image1 * 255.0))
-            #img.save(scene[0].decode('ascii') + "_3views.jpg")
-            #image = pc_util.point_cloud_to_image(all_points, 500)
-            #img = Image.fromarray(np.uint8(image * 255.0))
-            #img.save(scene[0].decode('ascii') + "toImage.jpg")
-            # uvidx, uvlabel, nvox = pc_util.point_cloud_label_to_surface_voxel_label(all_points, all_pred)  # res=
+            #print(f"\taccuracy: {acc_train:.4f}\taccumulated iou: {train_iou_val:.4f}")
+            if scene != current_scene and current_scene != "":
+                print("got all for one scene so please evaluate this scene")
+                print(len(np.unique(pointerres_orig)))
+                all_points = np.concatenate(all_points)
+                all_pred = np.concatenate(all_pred)
+                all_labels = np.concatenate(all_labels)
+                all_masks = np.concatenate(all_masks)
+                all_masks = np.array(all_masks, dtype=bool)
+                all_points_orig_idxs = np.concatenate(all_points_orig_idxs)
 
-            all_pred = []
-            all_labels = []
-            all_points = []
-        all_pred.append(max_pred)
-        all_labels.append(val_labels)
-        all_points.append(points_res)
-        current_scene = scene
+                restored_labels = map_back(all_labels, all_points_orig_idxs, all_masks, (len(np.unique(all_points_orig_idxs))))
+                restored_points = map_back(all_points, all_points_orig_idxs, all_masks, (len(np.unique(all_points_orig_idxs)), 3))
+                remapped_pred = map_back(all_pred, all_points_orig_idxs, all_masks, (len(np.unique(all_points_orig_idxs))))
+                np.save("/home/tim/results/for_visualization/points/%s.npy" % current_scene[0].decode('ascii'),
+                        restored_points)
+                np.save("/home/tim/results/for_visualization/labels/%s.npy" % current_scene[0].decode('ascii'),
+                        remapped_pred)
+                np.save(
+                    "/home/tim/results/for_visualization/groundtruth_labels/%s.npy" % current_scene[0].decode('ascii'),
+                    restored_labels)
 
+                remapped_pred = map_to_nyu40(remapped_pred)
+                #print("original points", pointerres_orig.shape)
+                #print("restored points", restored_points.shape, restored_points)
+                #print("unchanged values", np.sum(restored_points == -2) / 3, "total values",
+                #      np.sum(np.ones_like(restored_points)) / 3)
+
+
+                #output_predictions = "/home/tim/results/predictions_colors/%s.txt" % current_scene[0].decode('ascii')
+                #util_3d.export_ids(output_predictions, remapped_pred)
+
+
+
+
+                #image1 = pc_util.point_cloud_three_views(all_points)
+                #img = Image.fromarray(np.uint8(image1 * 255.0))
+                #img.save(scene[0].decode('ascii') + "_3views.jpg")
+                #image = pc_util.point_cloud_to_image(all_points, 500)
+                #img = Image.fromarray(np.uint8(image * 255.0))
+                #img.save(scene[0].decode('ascii') + "toImage.jpg")
+                # uvidx, uvlabel, nvox = pc_util.point_cloud_label_to_surface_voxel_label(all_points, all_pred)  # res=
+
+                all_pred = []
+                all_labels = []
+                all_points = []
+                all_points_orig_idxs = []
+                all_masks = []
+            all_pred.append(max_pred)
+            all_labels.append(labels_res)
+            all_points.append(points_res)
+            all_points_orig_idxs.append(pointerres_orig)
+            all_masks.append(maskerrades)
+            current_scene = scene
+        except:
+            print("NO NO NO NO")
 
 
 if __name__ == '__main__':

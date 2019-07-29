@@ -23,7 +23,7 @@ v = pptk.viewer(points[0], colors)
 v.set(point_size=0.005)'''
 
 # Visualize prediction
-output2 = os.path.join('/tmp/to_visualize1562169522_4.pickle')
+output2 = os.path.join('/tmp/to_visualize1562169522_74.pickle')
 with open(output2, 'rb') as wfp2:
     points = pickle.load(wfp2, encoding='latin1')
     labels = pickle.load(wfp2, encoding='latin1')
