@@ -47,8 +47,8 @@ def read_label(filename):
 def to_np_array(filename):
     """
     takes ply file and extracts point coordinates, colors, and labels
-    warning, this method cannot really work to create the dataset as it reads label colors from a label file
-    while a normal scene file does not contain the label information -> use with care
+    warning, this method only works on label files, which have not the original color but the labels color assigned
+    -> use with care
 
     :param filename:
     :return:
@@ -67,18 +67,17 @@ def to_np_array(filename):
         colors[:, 1] = ply_data['vertex'].data['green']
         colors[:, 2] = ply_data['vertex'].data['blue']
         # next line works only for label files
-        # labels = np.array(ply_data['vertex'].data['label'], dtype=np.int16)
-        labels = None
+        labels = np.array(ply_data['vertex'].data['label'], dtype=np.int16)
     return vertices, colors, labels
 
 
-def visualize():
+def visualize(file="C:/scannet/scene0000_00_vh_clean_2.ply"):
     """
     visualizes ply file with pptk
 
     :return:
     """
-    v1, c1 = read_mesh_vertices("C:/scannet/scene0000_00_vh_clean_2.ply")
+    v1, c1 = read_mesh_vertices(file)
     # v1 = v1[:20000]
     # c1 = c1[:20000]
     print(v1.shape)
@@ -90,47 +89,38 @@ def visualize():
     view.attributes(c1)
 
 
-def copy_data_to_numpy():
+def copy_data_to_numpy(source_dir="C:/scannet", target_dir="C:/scannet-pre/"):
     """
     iterates over a folder with scene and label ply files and extracts coordinates, color and labels for each scene
     saves the result in the target directory
-    warning, this does only work if to_np_array() is adjusted correctly
 
     :return:
     """
-    target_dir = "C:/scannet-pre/"
-    for subdir, dirs, files in os.walk("C:/scannet"):
+    for subdir, dirs, files in os.walk(source_dir):
         for file in files:
             if file.endswith("_vh_clean_2.labels.ply"):
                 print(f"open file: {subdir + '/' + file}")
-                v, _, l = to_np_array(subdir + '/' + file)
-                np.save(target_dir + "points/" + file, v)
+                l = read_label(subdir + '/' + file)
                 np.save(target_dir + "labels/" + file, l)
             if file.endswith("_vh_clean_2.ply"):
                 print(f"open file: {subdir + '/' + file}")
-                _, c, _ = to_np_array(subdir + '/' + file)
+                v, c = read_mesh_vertices(subdir + '/' + file)
+                np.save(target_dir + "points/" + file, v)
                 np.save(target_dir + "colors/" + file, c)
 
 
-def copy_test_data_to_numpy():
+def copy_test_data_to_numpy(source_dir="C:/scannet", target_dir="C:/scannet-pre/"):
     """
     iterates over a folder with test ply files and extracts point coordinates and color for each scene
     saves the result in the target directory
-    warning, this does only work if to_np_array() is adjusted correctly
 
     :return:
     """
-    target_dir = "C:/scannet-pre/"
-    for subdir, dirs, files in os.walk("C:/scannet"):
+    for subdir, dirs, files in os.walk(source_dir):
         for file in files:
-            # if file.endswith("_vh_clean_2.labels.ply"):
-            #     print(f"open file: {subdir + '/' + file}")
-            #     v, _, l = to_np_array(subdir + '/' + file)
-            #     np.save(target_dir + "points/" + file, v)
-            #     np.save(target_dir + "labels/" + file, l)
             if file.endswith("_vh_clean_2.ply"):
                 print(f"open file: {subdir + '/' + file}")
-                v, c, _ = to_np_array(subdir + '/' + file)
+                v, c = read_mesh_vertices(subdir + '/' + file)
                 np.save(target_dir + "colors/" + file, c)
                 np.save(target_dir + "points/" + file, v)
 
@@ -148,6 +138,6 @@ def rename_files(dir):
         os.rename(os.path.join(dir, file), os.path.join(dir, file[:12] + ".npy"))
 
 
-
 if __name__ == '__main__':
+    copy_data_to_numpy()
     copy_test_data_to_numpy()
