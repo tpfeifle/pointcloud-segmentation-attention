@@ -3,7 +3,7 @@ import os
 import sys
 import numpy as np
 from pointnet2_tensorflow.scannet import pc_util
-from scannet import scene_util
+from pointnet2_tensorflow.scannet import scene_util
 
 
 class ScannetDataset():
@@ -11,7 +11,7 @@ class ScannetDataset():
         self.npoints = npoints
         self.root = root
         self.split = split
-        self.data_filename = os.path.join(self.root, 'scannet_%s.pickle' % (split))
+        self.data_filename = os.path.join(self.root, 'parts/single_scene.pickle')  # this is only one scene
         with open(self.data_filename, 'rb') as fp:
             self.scene_points_list = pickle.load(fp, encoding='latin1')
             self.semantic_labels_list = pickle.load(fp, encoding='latin1')
@@ -38,6 +38,7 @@ class ScannetDataset():
         isvalid = False
         for i in range(10):
             curcenter = point_set[np.random.choice(len(semantic_seg), 1)[0], :]
+            # curcenter = point_set[[0][0], :]
             curmin = curcenter - [0.75, 0.75, 1.5]
             curmax = curcenter + [0.75, 0.75, 1.5]
             curmin[2] = coordmin[2]
@@ -55,6 +56,7 @@ class ScannetDataset():
             if isvalid:
                 break
         choice = np.random.choice(len(cur_semantic_seg), self.npoints, replace=True)
+        # choice = np.zeros(self.npoints, dtype=int)
         point_set = cur_point_set[choice, :]
         semantic_seg = cur_semantic_seg[choice]
         mask = mask[choice]
@@ -71,7 +73,7 @@ class ScannetDatasetWholeScene():
         self.npoints = npoints
         self.root = root
         self.split = split
-        self.data_filename = os.path.join(self.root, 'scannet_%s.pickle' % (split))
+        self.data_filename = os.path.join(self.root, 'parts/single_scene.pickle')
         print(self.data_filename)
         with open(self.data_filename, 'rb') as fp:
             self.scene_points_list = pickle.load(fp, encoding='latin1')

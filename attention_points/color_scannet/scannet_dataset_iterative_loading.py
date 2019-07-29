@@ -1,9 +1,15 @@
-import pickle
 import os
-import sys
+
 import numpy as np
+
 from pointnet2_tensorflow.scannet import pc_util
-from scannet import scene_util
+
+label_map = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 11: 12, 13: 13, 15: 14, 23: 15,
+             27: 16, 32: 17, 33: 18, 35: 19, 38: 20}
+
+
+def get_mapped_label(x):
+    return label_map.get(x, 0)
 
 
 class ScannetDataset():
@@ -11,24 +17,34 @@ class ScannetDataset():
         self.npoints = npoints
         self.root = root
         self.split = split
-        self.data_filename = os.path.join(self.root, 'scannet_%s.pickle' % (split))
-        with open(self.data_filename, 'rb') as fp:
-            self.scene_points_list = pickle.load(fp, encoding='latin1')
-            self.semantic_labels_list = pickle.load(fp, encoding='latin1')
+        self.scene_list = []
+        with open('splits/scannetv2_%s.txt' % split, 'r') as fp:
+            for line in fp:
+                line = line.rstrip()
+                self.scene_list.append(line)
+
         if split == 'train':
-            labelweights = np.zeros(21)
-            for seg in self.semantic_labels_list:
-                tmp, _ = np.histogram(seg, range(22))
-                labelweights += tmp
-            labelweights = labelweights.astype(np.float32)
-            labelweights = labelweights / np.sum(labelweights)
-            self.labelweights = 1 / np.log(1.2 + labelweights)
+            self.labelweights = np.array(
+                [3.1901786, 3.7639537, 2.7430649, 3.0830503, 4.7857547, 4.9963746, 4.3727107, 5.039125,
+                 4.8645177, 4.7177515, 4.8094106, 5.0520964, 5.3891287, 5.457014, 5.021409, 5.314314,
+                 5.4468026, 5.4196362, 5.4229546, 5.4382286, 5.0536995])
         elif split == 'test':
             self.labelweights = np.ones(21)
 
     def __getitem__(self, index):
-        point_set = self.scene_points_list[index]
-        semantic_seg = self.semantic_labels_list[index].astype(np.int32)
+
+        points_file = os.path.join(self.root, 'points/%s.npy' % self.scene_list[index])
+        labels_file = os.path.join(self.root, 'labels/%s.npy' % self.scene_list[index])
+        colors_file = os.path.join(self.root, 'colors/%s_vh_clean_2.ply.npy' % self.scene_list[index])
+        point_set = np.load(points_file)
+        labels = np.load(labels_file).astype(np.int32)
+        mapped_labels = np.array(list(map(lambda label: get_mapped_label(label), labels)))
+        semantic_seg = mapped_labels
+        colors = np.load(colors_file)
+
+        # point_set = self.scene_points_list[index]
+        # semantic_seg = self.semantic_labels_list[index].astype(np.int32)
+        # colors = self.colors_list[index].astype(np.int32)
         coordmax = np.max(point_set, axis=0)
         coordmin = np.min(point_set, axis=0)
         smpmin = np.maximum(coordmax - [1.5, 1.5, 3.0], coordmin)
@@ -45,6 +61,7 @@ class ScannetDataset():
             curchoice = np.sum((point_set >= (curmin - 0.2)) * (point_set <= (curmax + 0.2)), axis=1) == 3
             cur_point_set = point_set[curchoice, :]
             cur_semantic_seg = semantic_seg[curchoice]
+            cur_colors = colors[curchoice, :]
             if len(cur_semantic_seg) == 0:
                 continue
             mask = np.sum((cur_point_set >= (curmin - 0.01)) * (cur_point_set <= (curmax + 0.01)), axis=1) == 3
@@ -57,16 +74,17 @@ class ScannetDataset():
         choice = np.random.choice(len(cur_semantic_seg), self.npoints, replace=True)
         point_set = cur_point_set[choice, :]
         semantic_seg = cur_semantic_seg[choice]
+        color_set = cur_colors[choice, :]
         mask = mask[choice]
         sample_weight = self.labelweights[semantic_seg]
         sample_weight *= mask
-        return point_set, semantic_seg, sample_weight
+        return point_set, color_set, semantic_seg, sample_weight
 
     def __len__(self):
-        return len(self.scene_points_list)
+        return len(self.scene_list)
 
 
-class ScannetDatasetWholeScene():
+'''class ScannetDatasetWholeScene():
     def __init__(self, root, npoints=8192, split='train'):
         self.npoints = npoints
         self.root = root
@@ -176,15 +194,14 @@ class ScannetDatasetVirtualScan():
         return point_sets, semantic_segs, sample_weights
 
     def __len__(self):
-        return len(self.scene_points_list)
-
+        return len(self.scene_points_list)'''
 
 if __name__ == '__main__':
-    d = ScannetDatasetWholeScene(root='data/', split='test', npoints=8192)
+    d = ScannetDataset(root='/home/tim/scannet-pre/', split='test', npoints=8192)
     labelweights_vox = np.zeros(21)
     for ii in range(len(d)):
         print(ii)
-        ps, seg, smpw = d[ii]
+        ps, color, seg, smpw = d[ii]
         for b in range(ps.shape[0]):
             _, uvlabel, _ = pc_util.point_cloud_label_to_surface_voxel_label_fast(ps[b, smpw[b, :] > 0, :],
                                                                                   seg[b, smpw[b, :] > 0], res=0.02)
