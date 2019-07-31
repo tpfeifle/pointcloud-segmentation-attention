@@ -5,16 +5,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-import attention_points.models.pointnet2_sem_seg_attention_single_layer as model
+import attention_points.models.pointnet2_sem_seg_attention as model
 from attention_points.scannet_dataset import precompute_dataset
 
 N_POINTS = 8192
 N_TRAIN_SAMPLES = 1201 // 3
 N_VAL_SAMPLES = 4542 // 3
 BATCH_SIZE = 16
-LOG_DIR = None
+LOG_DIR = os.path.join(f'/home/tim/training_log/subset/attention_in_all_layers_{int(time.time())}')
 
-class_weights = None
+class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
+                             4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025,
+                             4.809412839311939, 5.052097251455304, 5.389129668645318, 5.390614085649042,
+                             5.127458225110977, 5.086056870814752, 5.3831185190895265, 5.422684124268539,
+                             5.422955391988761, 5.433705358072363, 5.417426773812747, 4.870172044153657])
 
 
 def get_learning_rate(batch):
@@ -47,21 +51,9 @@ def show_prediction_historgram(prediction):
     plt.show()
 
 
-def train_all():
-    global LOG_DIR
-    global class_weights
-    for i, model_func in enumerate([model.get_model_l1, model.get_model_l2, model.get_model_l3, model.get_model_l4]):
-        tf.reset_default_graph()
-        class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
-                                     4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025,
-                                     4.809412839311939, 5.052097251455304, 5.389129668645318, 5.390614085649042,
-                                     5.127458225110977, 5.086056870814752, 5.3831185190895265, 5.422684124268539,
-                                     5.422955391988761, 5.433705358072363, 5.417426773812747, 4.870172044153657])
-        LOG_DIR = os.path.join(f'/home/tim/training_log/subset/attention_in_layer_{i}_{int(time.time())}')
-        train_single_layer(model_func)
 
 
-def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to_val=4):
+def train(epochs=250, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     tf.Graph().as_default()
     tf.device('/gpu:0')
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
@@ -102,7 +94,7 @@ def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to
     learning_rate = get_learning_rate(step)
 
     # train metrics
-    train_pred, _ = get_model(train_coordinates, is_training_pl, 21, bn_decay=bn_decay)
+    train_pred, _ = model.get_model(train_coordinates, is_training_pl, 21, bn_decay=bn_decay)
     train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred,
                                                         weights=train_sample_weight)
 
@@ -127,7 +119,7 @@ def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to
     train_op = optimizer.minimize(train_loss, global_step=step)
 
     # validation metrics
-    val_pred, _ = get_model(val_coordinates, is_training_pl, 21)
+    val_pred, _ = model.get_model(val_coordinates, is_training_pl, 21)
     val_loss = tf.losses.sparse_softmax_cross_entropy(labels=val_labels, logits=val_pred,
                                                       weights=val_sample_weight)
 
@@ -157,24 +149,13 @@ def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to
 
     # add summaries
     train_writer = tf.summary.FileWriter(LOG_DIR + "_train", sess.graph)
-    # tf.summary.scalar('accuracy', train_acc)
-    # tf.summary.scalar('loss', train_loss)
-    # tf.summary.scalar('iou', train_iou)
-    # tf.summary.scalar('bn_decay', bn_decay)
-    # tf.summary.scalar('learning_rate', learning_rate)
-    # tf.summary.scalar('step', step)
-    # train_summaries = tf.summary.merge_all()
 
     val_writer = tf.summary.FileWriter(LOG_DIR + "_val")
-    # val_acc_summary = tf.summary.scalar('accuracy', val_acc)
-    # val_iou_summary = tf.summary.scalar('iou', val_iou)
-    # val_summaries = tf.summary.merge([val_acc_summary, val_iou_summary])
 
     saver = tf.train.Saver()
 
     batches_per_epoch = N_TRAIN_SAMPLES / batch_size
     print(f"batches per epoch: {batches_per_epoch}")
-    # print(tf.trainable_variables())
     acc_sum, loss_sum = 0, 0
     best_iou = 0
 
@@ -255,4 +236,4 @@ def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to
 
 
 if __name__ == '__main__':
-    train_all()
+    train()
