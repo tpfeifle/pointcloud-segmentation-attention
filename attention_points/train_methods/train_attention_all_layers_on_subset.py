@@ -255,4 +255,4 @@ def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to
 
 
 if __name__ == '__main__':
-    train()
+    train_all()

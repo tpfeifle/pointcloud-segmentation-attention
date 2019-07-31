@@ -1,9 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import attention_points.models.pointnet2_sem_seg_features as model
-from attention_points.scannet_dataset import generator_dataset, precompute_dataset
-from pointnet2_tensorflow.scannet import pc_util
-from attention_points.benchmark import util_3d
+from attention_points.scannet_dataset import precompute_dataset
 
 N_POINTS = 8192
 N_VAL_SAMPLES = 20000

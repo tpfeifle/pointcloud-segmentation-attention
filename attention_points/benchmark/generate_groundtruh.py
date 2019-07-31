@@ -12,8 +12,7 @@ import os
 
 import numpy as np
 
-from attention_points.benchmark import util
-from attention_points.benchmark import util_3d
+from attention_points.visualization import util, util_3d
 
 TASK_TYPES = {'label', 'instance'}
 

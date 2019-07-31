@@ -4,21 +4,13 @@ Author: Charles R. Qi
 Date: November 2017
 """
 
-import os
-import sys
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(BASE_DIR)
-sys.path.append(os.path.join(ROOT_DIR, 'utils'))
-sys.path.append(os.path.join(ROOT_DIR, 'tf_ops/sampling'))
-sys.path.append(os.path.join(ROOT_DIR, 'tf_ops/grouping'))
-sys.path.append(os.path.join(ROOT_DIR, 'tf_ops/interpolation_3d'))
-from tf_sampling import farthest_point_sample, gather_point
-from tf_grouping import query_ball_point, group_point, knn_point
-from tf_interpolate import three_nn, three_interpolate
-import tensorflow as tf
 import numpy as np
-from utils import tf_util
+import tensorflow as tf
+
+from pointnet2_tensorflow.tf_ops.grouping.tf_grouping import query_ball_point, group_point, knn_point
+from pointnet2_tensorflow.tf_ops.interpolation_3d.tf_interpolate import three_nn, three_interpolate
+from pointnet2_tensorflow.tf_ops.sampling.tf_sampling import farthest_point_sample, gather_point
+from pointnet2_tensorflow.utils import tf_util
 
 
 def sample_and_group(npoint, radius, nsample, xyz, points, knn=False, use_xyz=True):

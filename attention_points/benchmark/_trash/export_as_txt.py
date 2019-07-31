@@ -10,7 +10,7 @@
 # python imports
 import numpy as np
 
-from attention_points.benchmark import util_3d
+from attention_points.visualization import util_3d
 
 
 def main():

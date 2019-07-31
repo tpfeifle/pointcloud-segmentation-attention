@@ -12,7 +12,7 @@ import argparse
 
 import numpy as np
 
-from attention_points.benchmark import util_3d
+from attention_points.visualization import util_3d
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--grid_file', required=False, help='path to predicted grid as np array')
