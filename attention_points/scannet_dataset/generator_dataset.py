@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def scene_name_generator(train: str) -> Generator:
+def scene_name_generator(train: str, base_dir="/home/tim/.max_remote_deployment/") -> Generator:
     """
     yields the scene names of either train, val or test set
 
@@ -17,18 +17,17 @@ def scene_name_generator(train: str) -> Generator:
     :return:
     """
     if train == "train":
-        with open("splits/scannetv2_train.txt") as f:
+        with open(base_dir+"attention_points/scannet_dataset/splits/scannetv2_train.txt") as f:
             scenes = f.readlines()
     elif train == "val":
-        with open("splits/scannetv2_val.txt") as f:
+        with open(base_dir+"attention_points/scannet_dataset/splits/scannetv2_val.txt") as f:
             scenes = f.readlines()
     elif train == "test":
         print("lets try")
-        with open("/home/tim/ADL4CV_TIM/pointnet2_tensorflow/splits/scannetv2_test.txt") as f:
+        with open(base_dir+"attention_points/scannet_dataset/splits/scannetv2_test.txt") as f:
             scenes = f.readlines()
-        print("Hello from the scenic side %s" % len(scenes))
     elif train == "train_subset":
-        with open("splits/scannetv2_train.txt") as f:
+        with open(base_dir+"attention_points/scannet_dataset/splits/scannetv2_train.txt") as f:
             scenes = f.readlines()
             scenes = scenes[:len(scenes) // 3]
     else:
@@ -37,7 +36,6 @@ def scene_name_generator(train: str) -> Generator:
     while True:
         if train == "train" or train == "train_subset":
             random.shuffle(scenes)
-            print("shuffle while your hot")
         for scene in scenes:
             yield (scene[:-1])
 
