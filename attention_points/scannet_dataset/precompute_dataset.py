@@ -8,7 +8,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
-from attention_points.scannet_dataset import generator_dataset, data_transformation
+from attention_points.scannet_dataset import generator_dataset, data_transformation, complete_scene_loader
 
 
 def precompute_train_data(epochs, elements_per_epoch, out_dir, dataset, add_epoch=0):
@@ -70,11 +70,10 @@ def generate_eval_data():
     generator which iterates over precomputed validation set and yields single subsets
     """
     for scene_name in generator_dataset.scene_name_generator("val"):
-        print(scene_name)
         points_val, labels_val, colors_val, normals_val = generator_dataset.load_from_scene_name(scene_name)
-        labels_val = data_transformation.label_map_more_paraemters(labels_val.astype(np.int32))
-        subscenes = data_transformation.get_all_subsets_with_all_points_for_scene_numpy(points_val, labels_val,
-                                                                                        colors_val, normals_val)
+        labels_val = data_transformation.label_map_more_parameters(labels_val.astype(np.int32))
+        subscenes = complete_scene_loader.get_all_subsets_with_all_points_for_scene_numpy(points_val, labels_val,
+                                                                                          colors_val, normals_val)
 
         for j in range(len(subscenes[0])):
             points_val, labels_val, colors_val, normals_val, sample_weight_val, mask, points_orig_idxs = (x[j] for x in
@@ -88,8 +87,8 @@ def generate_test_data():
     """
     for scene_name in generator_dataset.scene_name_generator("test"):
         points_val, colors_val, normals_val = generator_dataset.load_from_scene_name_test(scene_name)
-        subscenes = data_transformation.get_all_subsets_with_all_points_for_scene_numpy_test(points_val, colors_val,
-                                                                                             normals_val)
+        subscenes = complete_scene_loader.get_all_subsets_with_all_points_for_scene_numpy_test(points_val, colors_val,
+                                                                                               normals_val)
 
         for j in range(len(subscenes[0])):
             points_val, colors_val, normals_val, mask, points_orig_idxs = (x[j] for x in subscenes)
@@ -208,7 +207,6 @@ def precomputed_val_subset_data_generator(dir="/home/tim/data/val_precomputed"):
     """
     file_list = sorted(os.listdir(dir))
     file_list = file_list[:len(file_list) // 3]
-    print("val files", len(file_list))
     while True:
         for filename in file_list:
             if filename.endswith(".pickle"):
@@ -237,7 +235,6 @@ def precompute_subset_train_data():
     """
     ds = data_transformation.get_transformed_dataset("train_subset").prefetch(4)
     precompute_train_data(100, 1201 // 3, "/home/tim/data/train_subset_precomputed", ds, 0)
-    print("done")
 
 
 def main():

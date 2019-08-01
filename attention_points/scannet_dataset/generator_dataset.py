@@ -23,7 +23,6 @@ def scene_name_generator(train: str, base_dir="/home/tim/.max_remote_deployment/
         with open(base_dir+"attention_points/scannet_dataset/splits/scannetv2_val.txt") as f:
             scenes = f.readlines()
     elif train == "test":
-        print("lets try")
         with open(base_dir+"attention_points/scannet_dataset/splits/scannetv2_test.txt") as f:
             scenes = f.readlines()
     elif train == "train_subset":
