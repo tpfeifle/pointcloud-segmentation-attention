@@ -261,4 +261,5 @@ def main():
                           os.path.join(out_dir_tasks, TEST_FRAMES_FILE[0]))
 
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()

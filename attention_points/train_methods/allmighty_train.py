@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from attention_points.models import pointnet2_sem_seg_features
+from attention_points.models import pointnet2_sem_seg_features, pointnet2_sem_seg_attention
 from attention_points.scannet_dataset import precompute_dataset
 from pointnet2_tensorflow.models import pointnet2_sem_seg
 
