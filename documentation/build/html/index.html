@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PointNet++ with Attention and Additional Features &mdash; PointNet++ with Attention and Additional Features 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Preprocessing Methods" href="preprocessing.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> PointNet++ with Attention and Additional Features
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">New Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">PointNet++ with Attention and Additional Features</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>PointNet++ with Attention and Additional Features</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pointnet-with-attention-and-additional-features">
+<h1>PointNet++ with Attention and Additional Features<a class="headerlink" href="#pointnet-with-attention-and-additional-features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>Our project builds on the <cite>PointNet++ implementation of Charles Qi &lt;https://github.com/charlesq34/pointnet2&gt;</cite>. In our repository the folder <cite>pointnet2_tensorflow</cite> contains an almost untouched version of this repository.</p>
+<p>The folder <cite>attention_points</cite> contains our new code, including a new data pipeline, model variations,
+training methods, benchmark scripts, visualizations and a new way to create predictions for large point clouds.</p>
+<p>The following gives an overview over the different modules and their functionality.</p>
+</div>
+<div class="section" id="preprocessing">
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h2>
+<p>Methods to preprocess the data provided by ScanNet.
+Includes computation of normal vectors, extraction from ply to numpy, etc..</p>
+</div>
+<div class="section" id="dataset">
+<h2>Dataset<a class="headerlink" href="#dataset" title="Permalink to this headline">¶</a></h2>
+<p>Methods to load and transform data efficiently for training and evaluation.</p>
+</div>
+<div class="section" id="models">
+<h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
+<p>Different models using Attention and features (colors, normals) can be found in the folder models.</p>
+</div>
+<div class="section" id="training">
+<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
+<p>We have one training method that works for all our different models and uses our precomputed dataset generators.</p>
+</div>
+<div class="section" id="benchmark">
+<h2>Benchmark<a class="headerlink" href="#benchmark" title="Permalink to this headline">¶</a></h2>
+<p>To predict labels for each point in each scene <cite>generate_predictions.py</cite> takes as input a trained model.
+We first create subsets for each scene (see <cite>scannet_dataset/complete_scene_loader.py</cite>), each containing random 8192 points
+and then keep the predictions for our inner cuboid region by masking out the others.
+The predictions are then stored in two different formats:</p>
+<ol class="arabic simple">
+<li><p>For visualization with the visualization scripts as numpy-arrays</p></li>
+<li><p>For evaluation on the benchmark in the benchmark format (one label per line in files following the naming <cite>scene%04d_%02d.txt</cite>)</p></li>
+</ol>
+<p>We evaluated our model using the additional features using the official <cite>ScanNet-Benchmark &lt;http://kaldir.vc.in.tum.de/scannet_benchmark/&gt;</cite>.
+The validation benchmark scores can be calculated using the additional scripts in the benchmark module.
+Those contain the <cite>generate_groundtruth.py</cite> that generates the <cite>scene%04d_%02d.txt</cite> files with the correct labels
+and the <cite>evaluate.py</cite> script that compares the predicted labels for each scene with the groundtruth and outputs the IoU by class as well as the confusion matrix.</p>
+</div>
+<div class="section" id="visualization">
+<h2>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline">¶</a></h2>
+<p>The predicted labels can also be qualitatively evaluated. The script <cite>qualitative_animations.py</cite> takes
+the points and predicted labels of scenes as input and visualizes them using the pptk-viewer.</p>
+<a class="reference internal image-reference" href="https://github.com/MaxRieger96/attention-points/blob/master/attention_points/visualization/examples/frame_079.png?raw=true"><img alt="Example visualization" class="align-center" src="https://github.com/MaxRieger96/attention-points/blob/master/attention_points/visualization/examples/frame_079.png?raw=true" style="width: 400px;" /></a>
+<p>It rotates the scenes and saves those animation frames as images. Those can be converted into videos using
+e.g. ffmpeg with:
+<code class="code bash docutils literal notranslate"><span class="pre">ffmpeg</span> <span class="pre">-i</span> <span class="literal string double"><span class="pre">“scene0XXX_0X/frame_%03d.png”</span></span> <span class="pre">-c:v</span> <span class="pre">mpeg4</span> <span class="pre">-qscale:v</span> <span class="literal number"><span class="pre">0</span></span> <span class="pre">-r</span> <span class="literal number"><span class="pre">24</span></span> <span class="pre">scene0XXX_0X.mp4</span></code></p>
+<p>If one wants to debug the performance of the model during training one can instead use the <cite>labels_during_training.py</cite> file to animate
+the predicted labels over the time of multiple training steps.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">New Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="preprocessing.html" class="btn btn-neutral float-right" title="Preprocessing Methods" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tim Pfeilfe, Maximilian Rieger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
