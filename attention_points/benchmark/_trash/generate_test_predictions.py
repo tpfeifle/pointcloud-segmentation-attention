@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 import pointnet2_tensorflow.models.pointnet2_sem_seg as model
-from attention_points.benchmark._trash import util_3d
+from attention_points.benchmark import util_3d
 from attention_points.scannet_dataset import precompute_dataset
 
 N_POINTS = 8192

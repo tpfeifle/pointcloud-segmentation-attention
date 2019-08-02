@@ -1,23 +1,27 @@
 """
+Evaluates semantic label task
 Adapted from ScanNet benchmark scripts: https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts
     Authors of ScanNet:
     Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Niessner, Matthias
-"""
 
-# Evaluates semantic label task
-# Input:
-#   - path to .txt prediction files
-#   - path to .txt ground truth files
-#   - output file to write results to
-# Note that only the valid classes are used for evaluation,
-# i.e., any ground truth label not in the valid label set
-# is ignored in the evaluation.
-#
+Input:
+  - path to .txt prediction files
+  - path to .txt ground truth files
+  - output file to write results to
+Note that only the valid classes are used for evaluation,
+i.e., any ground truth label not in the valid label set
+is ignored in the evaluation.
+"""
 
 import inspect
 import os
 import sys
 import numpy as np
+from typing import Dict, List
+
+pred_path = "/home/tim/results/predictions_colors"
+gt_path = "/home/tim/results/groundtruth"
+output_file = "/home/tim/results/results_colors.txt"
 
 try:
     from itertools import izip
@@ -29,7 +33,13 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 
-def load_ids(filename):
+def load_ids(filename: str):
+    """
+    Read the predicted label ids from the specified filename
+
+    :param filename: Name of the label file
+    :return:
+    """
     ids = open(filename).read().splitlines()
     ids = np.array(ids, dtype=np.int64)
     return ids
@@ -42,7 +52,15 @@ VALID_CLASS_IDS = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24, 2
 UNKNOWN_ID = np.max(VALID_CLASS_IDS) + 1
 
 
-def evaluate_scan(pred_file, gt_file, confusion):
+def evaluate_scan(pred_file: str, gt_file: str, confusion: np.ndarray):
+    """
+    Update confusion matrix for the specified scene
+
+    :param pred_file: file containing the label predictions for one scene
+    :param gt_file: file containing the label groundtruth for one scene
+    :param confusion: confusion matrix to be updated by this scene
+    :return:
+    """
     try:
         pred_ids = load_ids(pred_file)
     except Exception as e:
@@ -62,9 +80,17 @@ def evaluate_scan(pred_file, gt_file, confusion):
         confusion[gt_val][pred_val] += 1
 
 
-def get_iou(label_id, confusion):
+def get_iou(label_id: int, confusion: np.ndarray):
+    """
+    Determine the IoU for the specified label_id by consulting the confusion matrix
+
+    :param label_id: Label for which the IoU should be determined
+    :param confusion: Confusion matrix (from the evaluation)
+    :return:
+    """
     if not label_id in VALID_CLASS_IDS:
         return float('nan')
+
     # #true positives
     tp = np.longlong(confusion[label_id, label_id])
     # #false negatives
@@ -79,7 +105,15 @@ def get_iou(label_id, confusion):
     return (float(tp) / denom, tp, denom)
 
 
-def write_result_file(confusion, ious, filename):
+def write_result_file(confusion: np.ndarray, ious: Dict[int, float], filename: str):
+    """
+    Write the evaluation result (IoUs and confusion matrix) to the specified filename
+
+    :param confusion: Confusion matrix (from the evaluation)
+    :param ious: IoUs for each label
+    :param filename: Filename to output the evaluation results to
+    :return:
+    """
     with open(filename, 'w') as f:
         f.write('iou scores\n')
         for i in range(len(VALID_CLASS_IDS)):
@@ -101,7 +135,15 @@ def write_result_file(confusion, ious, filename):
     print('wrote results to', filename)
 
 
-def evaluate(pred_files, gt_files, output_file):
+def evaluate(pred_files: List[str], gt_files: List[str], output_file_path: str):
+    """
+    Calculate the IoU for each label in each of the pred_files and write the summary output to the output_file_path
+
+    :param pred_files: Files containing the predictions for each scene
+    :param gt_files: Files containing the groundtruth for each scene
+    :param output_file_path: File to which the output should be written
+    :return:
+    """
     max_id = UNKNOWN_ID
     confusion = np.zeros((max_id + 1, max_id + 1), dtype=np.ulonglong)
 
@@ -123,14 +165,14 @@ def evaluate(pred_files, gt_files, output_file):
         label_name = CLASS_LABELS[i]
         print('{0:<14s}: {1:>5.3f}   ({2:>6d}/{3:<6d})'.format(label_name, class_ious[label_name][0],
                                                                class_ious[label_name][1], class_ious[label_name][2]))
-    write_result_file(confusion, class_ious, output_file)
+    write_result_file(confusion, class_ious, output_file_path)
 
 
 def main():
-    pred_path = "/home/tim/results/predictions_colors"
-    gt_path = "/home/tim/results/groundtruth"
-    output_file = "/home/tim/results/results_colors.txt"
-
+    """
+    Evaluate the IoU scores of the predicted labels for all the scenes by comparing with the groundtruth labels
+    :return:
+    """
     pred_files = [f for f in os.listdir(pred_path) if f.endswith('.txt')]
     gt_files = []
     if len(pred_files) == 0:
