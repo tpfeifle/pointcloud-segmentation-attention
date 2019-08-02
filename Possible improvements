@@ -1,7 +1,0 @@
-Attention Point Net:
- - Multi head (not yet)
- - Skip connections
- - Batchnorm (nicht ganz einfach, da nur eine Szene)
- - feed forward aus 2 layern + relu (dazwischen)
- - Dropout
- - L2 Regularization?

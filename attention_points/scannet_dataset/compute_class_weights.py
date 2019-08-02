@@ -6,16 +6,22 @@ import numpy as np
 
 from attention_points.scannet_dataset import generator_dataset
 
-label_map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15,
+LABEL_MAP = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15,
              28: 16, 33: 17, 34: 18, 36: 19, 39: 20}
 
 
-def get_weights():
+def get_weights() -> np.ndarray:
+    """
+    computes the weights for classes to use for training
+    note that class 0 is unannotated and should be weighted with 0
+
+    :return: weights (21)
+    """
     gen_train = generator_dataset.tf_train_generator()
     bin_count = np.zeros(21, dtype=int)
     for i in range(1201):
         points, labels, colors, normals = gen_train.__next__()
-        labels = [label_map.get(i, 0) for i in labels]
+        labels = [LABEL_MAP.get(i, 0) for i in labels]
         add_value = np.zeros(21, dtype=int)
         current_bin_count = np.bincount(labels)
         add_value[:current_bin_count.shape[0]] = current_bin_count
@@ -26,7 +32,6 @@ def get_weights():
 
     print(bin_count)
     total = np.sum(bin_count)
-    # weights = total / (len(bin_count) * bin_count)
     weights = 1 / np.log(1.2 + bin_count / total)
     return weights
 

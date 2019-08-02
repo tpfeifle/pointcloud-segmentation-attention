@@ -9,56 +9,74 @@ Some of these methods are implemented in both tensorflow and numpy.
 When executing on CPU the numpy versions are considerably faster.
 """
 import math
+from typing import Dict, Tuple
 
 import numpy as np
 import tensorflow as tf
 
 import attention_points.scannet_dataset.generator_dataset as gd
 
+LABEL_MAP: Dict[int, int] = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13,
+                             16: 14, 24: 15, 28: 16, 33: 17, 34: 18, 36: 19, 39: 20}
 
-def label_map(points, labels, colors, normals):
+
+def label_map(points: tf.Tensor, labels: tf.Tensor, colors: tf.Tensor, normals: tf.Tensor) \
+        -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     """
     tensorflow function to map labels from nyu40 to range [0, 20]
-    :return: points, mapped labels, colors, normals
+
+    :param points: (Nx3)
+    :param labels: (N)
+    :param colors: (Nx3)
+    :param normals: (Nx3)
+    :return: points(Nx3), mapped labels(N), colors(Nx3), normals(Nx3)
     """
-    map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
-           33: 17, 34: 18, 36: 19, 39: 20}
-    map = tf.convert_to_tensor([map.get(i, 0) for i in range(41)])
+    map = tf.convert_to_tensor([LABEL_MAP.get(i, 0) for i in range(41)])
     labels = tf.minimum(labels, 40)
     mapped_labels = tf.gather(map, labels)
     return points, mapped_labels, colors, normals
 
 
-def label_map_numpy(points, labels, colors, normals):
+def label_map_numpy(points: np.ndarray, labels: np.ndarray, colors: np.ndarray, normals: np.ndarray) \
+        -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     numpy function to map labels from nyu40 to range [0, 20]
-    :return: points, mapped labels, colors, normals
+
+    :param points: (Nx3)
+    :param labels: (N)
+    :param colors: (Nx3)
+    :param normals: (Nx3)
+    :return: points(Nx3), mapped labels(N), colors(Nx3), normals(Nx3)
     """
-    map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15, 28: 16,
-           33: 17, 34: 18, 36: 19, 39: 20}
-    map = np.array([map.get(i, 0) for i in range(41)])
+    map = np.array([LABEL_MAP.get(i, 0) for i in range(41)])
     labels = np.minimum(labels, 40)
     mapped_labels = map[labels]
     return points, mapped_labels, colors, normals
 
 
-def label_map_more_parameters(labels):
+def label_map_more_parameters(labels: np.ndarray) -> np.ndarray:
     """
     numpy function to map labels from nyu40 to range [0, 20]
-    :return: points, mapped labels, colors, normals
+
+    :param labels: (N)
+    :return: mapped labels (N)
     """
-    map_values = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 13, 16: 14, 24: 15,
-                  28: 16, 33: 17, 34: 18, 36: 19, 39: 20}
-    mapped_labels = np.array(list(map(lambda label: map_values.get(label, 0), labels)))
+    mapped_labels = np.array(list(map(lambda label: LABEL_MAP.get(label, 0), labels)))
     return mapped_labels
 
 
-def get_subset(points, labels, colors, normals):
+def get_subset(points: tf.Tensor, labels: tf.Tensor, colors: tf.Tensor, normals: tf.Tensor, npoints: int = 8192) \
+        -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     """
-    tensorflow function to get a random chunk of a scene which has exactly 8192 points
-    :return: points, labels, colors, normals, sample_weight
+    tensorflow function to get a random chunk of a scene which has exactly K points
+
+    :param points: (Nx3)
+    :param labels: (N)
+    :param colors: (Nx3)
+    :param normals: (Nx3)
+    :param npoints: (K) count of points to output (default 8192)
+    :return: points(Kx3), labels(K), colors(Kx3), normals(Kx3), sample_weights(K)
     """
-    npoints = 8192
     label_weights = [0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
                      4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025, 4.809412839311939,
                      5.052097251455304, 5.389129668645318, 5.390614085649042, 5.127458225110977, 5.086056870814752,
@@ -134,13 +152,21 @@ def get_subset(points, labels, colors, normals):
     return points, labels, colors, normals, sample_weight
 
 
-def get_all_subsets_for_scene(points, labels, colors, normals):
+def get_all_subsets_for_scene(points: tf.Tensor, labels: tf.Tensor, colors: tf.Tensor, normals: tf.Tensor,
+                              npoints: int = 8192) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     """
-    tensorflow function to get chunks for every area of a scene
+    tensorflow function to get chunks with K points for every area of a scene
     warning: this method is not tested yet -> use with care
-    :return: points_stack, labels_stack, colors_stack, normals_stack, sample_weight_stack
+
+    :param points: (Nx3)
+    :param labels: (N)
+    :param colors: (Nx3)
+    :param normals: (Nx3)
+    :param npoints: (K) count of points to output (default 8192)
+
+    :return: points_stack (X,K,3), labels_stack (X,K), colors_stack (X,K,3), normals_stack (X,K,3),
+        sample_weight_stack(X,K)
     """
-    npoints = 8192
     label_weights = tf.ones(21)  # For validation the weights keep all equal
 
     points_stack = tf.zeros([0, npoints, 3], dtype=tf.float32)
@@ -239,13 +265,22 @@ def get_all_subsets_for_scene(points, labels, colors, normals):
     return points_stack, labels_stack, colors_stack, normals_stack, tf.ones_like(labels_stack)
 
 
-def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
+def get_all_subsets_for_scene_numpy(points: np.ndarray, labels: np.ndarray, colors: np.ndarray, normals: np.ndarray,
+                                    npoints: str = 8192) \
+        -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-    numpy function to get chunks for every area of a scene
+    numpy function to get chunks with K points for every area of a scene
     this method is derived from Charles Qi's implementation
-    :return: points_stack, labels_stack, colors_stack, normals_stack, sample_weight_stack
+
+    :param points: (Nx3)
+    :param labels: (N)
+    :param colors: (Nx3)
+    :param normals: (Nx3)
+    :param npoints: (K) count of points to output (default 8192)
+
+    :return: points_stack (X,K,3), labels_stack (X,K), colors_stack (X,K,3), normals_stack (X,K,3),
+        sample_weight_stack(X,K)
     """
-    npoints = 8192
     label_weights = np.ones(21)
     label_weights[0] = 0
 
@@ -294,10 +329,18 @@ def get_all_subsets_for_scene_numpy(points, labels, colors, normals):
     return point_sets, semantic_segs, colors_sets, normals_sets, sample_weights
 
 
-def random_rotate(points, labels, colors, normals, sample_weight):
+def random_rotate(points: tf.Tensor, labels: tf.Tensor, colors: tf.Tensor, normals: tf.Tensor,
+                  sample_weight: tf.Tensor) \
+        -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     """
     tensorflow function to randomly rotate point cloud
-    :return: rotated points, labels, colors, rot_normals, sample_weight
+
+    :param points: (Nx3)
+    :param labels: (N)
+    :param colors: (Nx3)
+    :param normals: (Nx3)
+    :param sample_weight: (N)
+    :return: rotated points(Nx3), labels(N), colors(Nx3), rotated normals(Nx3), sample_weight: (N)
     """
     alpha = tf.random_uniform([], 0, math.pi * 2)
     rot_matrix = tf.convert_to_tensor(
@@ -307,21 +350,25 @@ def random_rotate(points, labels, colors, normals, sample_weight):
     return rot_points, labels, colors, rot_normals, sample_weight
 
 
-def get_transformed_dataset(train, prefetch=True):
+def get_transformed_dataset(train: str, prefetch: bool = True, threads: int = 4):
     """
     tensorflow dataset, to load and transform files asynchronous
+
+    :param train: one of  {"train", "val", "train_subset"}
+    :param prefetch: prefetches data if True
+    :param threads: number of parallel threads to use
     :return:
     """
     ds = gd.get_dataset(train)
     if prefetch:
         # prefetch loading from disk
-        ds = ds.prefetch(8)
-    ds = ds.map(label_map, 4)
+        ds = ds.prefetch(threads)
+    ds = ds.map(label_map, threads)
     if train == "train" or train == "train_subset":
-        ds = ds.map(get_subset, 4)
-        ds = ds.map(random_rotate, 4)
+        ds = ds.map(get_subset, threads)
+        ds = ds.map(random_rotate, threads)
     elif train == "val":
-        ds = ds.map(get_all_subsets_for_scene, 4)
+        ds = ds.map(get_all_subsets_for_scene, threads)
     else:
-        raise ValueError("train must be either 'train' or 'val'")
+        raise ValueError("train must be one of  {'train', 'val', 'train_subset'}")
     return ds
