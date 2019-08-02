@@ -1,0 +1,373 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Training &mdash; PointNet++ with Attention and Additional Features 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Visualizations" href="visualization.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PointNet++ with Attention and Additional Features
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">New Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualizations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Training</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.train">Train</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PointNet++ with Attention and Additional Features</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Training</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/training.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="training">
+<h1>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h1>
+<p>Here is the documentation for the training method</p>
+<div class="section" id="module-attention_points.train">
+<span id="train"></span><h2>Train<a class="headerlink" href="#module-attention_points.train" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="attention_points.train.eval_model">
+<code class="sig-name descname">eval_model</code><span class="sig-paren">(</span><em class="sig-param">is_training: tensorflow.python.ops.variables.Variable</em>, <em class="sig-param">sess: tensorflow.python.client.session.Session</em>, <em class="sig-param">best_iou: float</em>, <em class="sig-param">val_loss: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">val_acc: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">val_iou_update: tensorflow.python.framework.ops.Operation</em>, <em class="sig-param">val_iou: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">val_iou_reset: tensorflow.python.framework.ops.Operation</em>, <em class="sig-param">val_writer: tensorflow.python.summary.writer.writer.FileWriter</em>, <em class="sig-param">epoch: int</em>, <em class="sig-param">saver: tensorflow.python.training.saver.Saver</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#attention_points.train.eval_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluates model with one pass over validation set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>is_training</strong> – tf var which indicates if model is training</p></li>
+<li><p><strong>sess</strong> – tf sess</p></li>
+<li><p><strong>best_iou</strong> – best validation iou until now</p></li>
+<li><p><strong>val_loss</strong> – val loss tensor</p></li>
+<li><p><strong>val_acc</strong> – val accuracy tensor</p></li>
+<li><p><strong>val_iou_update</strong> – val iou update operation</p></li>
+<li><p><strong>val_iou</strong> – val iou tensor</p></li>
+<li><p><strong>val_iou_reset</strong> – val iou reset operation</p></li>
+<li><p><strong>val_writer</strong> – val summary writer</p></li>
+<li><p><strong>epoch</strong> – index of current epoch</p></li>
+<li><p><strong>saver</strong> – tf model saver</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>new best iou</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.get_bn_decay">
+<code class="sig-name descname">get_bn_decay</code><span class="sig-paren">(</span><em class="sig-param">batch: tensorflow.python.ops.variables.Variable</em><span class="sig-paren">)</span> &#x2192; tensorflow.python.ops.variables.Variable<a class="headerlink" href="#attention_points.train.get_bn_decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes batch norm decay from batch index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>batch</strong> – index of the current batch</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>batch norm decay</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.get_data_tensors">
+<code class="sig-name descname">get_data_tensors</code><span class="sig-paren">(</span><em class="sig-param">data_set: tensorflow.python.data.ops.dataset_ops.Dataset</em>, <em class="sig-param">sess: tensorflow.python.client.session.Session</em>, <em class="sig-param">batch_size: int</em>, <em class="sig-param">color: bool</em>, <em class="sig-param">normal: bool</em><span class="sig-paren">)</span> &#x2192; Tuple[tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, Optional[tensorflow.python.framework.ops.Tensor], tensorflow.python.framework.ops.Tensor]<a class="headerlink" href="#attention_points.train.get_data_tensors" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets points, labels, features and sample weight tensors from dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_set</strong> – tf dataset to load from</p></li>
+<li><p><strong>sess</strong> – tf session</p></li>
+<li><p><strong>batch_size</strong> – batch size</p></li>
+<li><p><strong>color</strong> – include colors in features</p></li>
+<li><p><strong>normal</strong> – include normals in features</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points(BxNx3), labels(BxN), features(BxNx?), sample_weigth(BxN)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.get_learning_rate">
+<code class="sig-name descname">get_learning_rate</code><span class="sig-paren">(</span><em class="sig-param">batch: tensorflow.python.ops.variables.Variable</em><span class="sig-paren">)</span> &#x2192; tensorflow.python.ops.variables.Variable<a class="headerlink" href="#attention_points.train.get_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes learning rate from batch index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>batch</strong> – index of the current batch</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>learning rate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.get_metrics">
+<code class="sig-name descname">get_metrics</code><span class="sig-paren">(</span><em class="sig-param">get_model: Callable, coordinates: tensorflow.python.framework.ops.Tensor, features: Optional[tensorflow.python.framework.ops.Tensor], is_training: tensorflow.python.ops.variables.Variable, bn_decay: tensorflow.python.ops.variables.Variable, labels: tensorflow.python.framework.ops.Tensor, sample_weight: tensorflow.python.framework.ops.Tensor, train: bool, attention_single_layer: int</em><span class="sig-paren">)</span> &#x2192; Tuple[tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Operation, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Operation]<a class="headerlink" href="#attention_points.train.get_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets model metrics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>get_model</strong> – method which gives prediction tensor back</p></li>
+<li><p><strong>coordinates</strong> – point coordinates (BxNx3)</p></li>
+<li><p><strong>features</strong> – feature tensor (optional) (BxNx?)</p></li>
+<li><p><strong>is_training</strong> – tf var which indicates if model is training</p></li>
+<li><p><strong>bn_decay</strong> – tf var which gives batch norm decay</p></li>
+<li><p><strong>labels</strong> – label tensor (BxN)</p></li>
+<li><p><strong>sample_weight</strong> – sample weight tensor (BxN)</p></li>
+<li><p><strong>train</strong> – bool, which indicates whether these are train metrics</p></li>
+<li><p><strong>attention_single_layer</strong> – if this value is not -1 than we use attention instead of
+the <cite>attention_single_layer</cite>-th max-pooling layer</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>loss, accuracy, predictions(BxNxC), iou_update operation, iou, iou_reset operation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.get_tf_summary">
+<code class="sig-name descname">get_tf_summary</code><span class="sig-paren">(</span><em class="sig-param">loss: float</em>, <em class="sig-param">acc: float</em>, <em class="sig-param">iou: float</em><span class="sig-paren">)</span> &#x2192; tensorflow.core.framework.summary_pb2.Summary<a class="headerlink" href="#attention_points.train.get_tf_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a tf Summary with loss, accuracy and iou</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loss</strong> – loss value</p></li>
+<li><p><strong>acc</strong> – accuracy value</p></li>
+<li><p><strong>iou</strong> – iou value</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>summary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.show_prediction_historgram">
+<code class="sig-name descname">show_prediction_historgram</code><span class="sig-paren">(</span><em class="sig-param">prediction: numpy.ndarray</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.train.show_prediction_historgram" title="Permalink to this definition">¶</a></dt>
+<dd><p>visualize the predictions of the model with a histogram</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prediction</strong> – prediction logits</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.summarize_epoch">
+<code class="sig-name descname">summarize_epoch</code><span class="sig-paren">(</span><em class="sig-param">epoch: int</em>, <em class="sig-param">sess: tensorflow.python.client.session.Session</em>, <em class="sig-param">learning_rate: tensorflow.python.ops.variables.Variable</em>, <em class="sig-param">bn_decay: tensorflow.python.ops.variables.Variable</em>, <em class="sig-param">loss_sum: float</em>, <em class="sig-param">batches_per_epoch: float</em>, <em class="sig-param">acc_sum: float</em>, <em class="sig-param">train_iou_val: float</em>, <em class="sig-param">train_writer: tensorflow.python.summary.writer.writer.FileWriter</em>, <em class="sig-param">train_iou_reset: tensorflow.python.framework.ops.Operation</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.train.summarize_epoch" title="Permalink to this definition">¶</a></dt>
+<dd><p>summarizes train metrics of one epoch</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epoch</strong> – index of epoch</p></li>
+<li><p><strong>sess</strong> – tf session</p></li>
+<li><p><strong>learning_rate</strong> – </p></li>
+<li><p><strong>bn_decay</strong> – </p></li>
+<li><p><strong>loss_sum</strong> – accumulated loss</p></li>
+<li><p><strong>batches_per_epoch</strong> – number of batches used in an epoch</p></li>
+<li><p><strong>acc_sum</strong> – accumulated accuracy</p></li>
+<li><p><strong>train_iou_val</strong> – accumulated train iou</p></li>
+<li><p><strong>train_writer</strong> – train summary writer</p></li>
+<li><p><strong>train_iou_reset</strong> – operation to reset train iou</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.train.train">
+<code class="sig-name descname">train</code><span class="sig-paren">(</span><em class="sig-param">epochs=1000</em>, <em class="sig-param">batch_size=16</em>, <em class="sig-param">use_color: bool = True</em>, <em class="sig-param">use_normal: bool = True</em>, <em class="sig-param">use_attention: bool = False</em>, <em class="sig-param">attention_single_layer: int = -1</em>, <em class="sig-param">use_subset: bool = False</em>, <em class="sig-param">n_epochs_to_val=4</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.train.train" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="visualization.html" class="btn btn-neutral float-left" title="Visualizations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tim Pfeilfe, Maximilian Rieger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

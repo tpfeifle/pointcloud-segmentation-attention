@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Preprocessing Methods &mdash; PointNet++ with Attention and Additional Features 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dataset Methods" href="dataset.html" />
+    <link rel="prev" title="Welcome to PointNet++ with Attention and Additional Features’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PointNet++ with Attention and Additional Features
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.local_dataset_computations.scannet_download_script">Download Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.local_dataset_computations.normal_computation_meshlab">Normal Computation with Meshlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.local_dataset_computations.normal_extraction">Normal Extraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.local_dataset_computations.ply_to_npy">Convert ply files to Numpy Arrays</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">New Models</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PointNet++ with Attention and Additional Features</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Preprocessing Methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/preprocessing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="preprocessing-methods">
+<h1>Preprocessing Methods<a class="headerlink" href="#preprocessing-methods" title="Permalink to this headline">¶</a></h1>
+<p>Here are all methods listed, which are used to preprocess the dataset.</p>
+<div class="section" id="module-attention_points.scannet_dataset.local_dataset_computations.scannet_download_script">
+<span id="download-script"></span><h2>Download Script<a class="headerlink" href="#module-attention_points.scannet_dataset.local_dataset_computations.scannet_download_script" title="Permalink to this headline">¶</a></h2>
+<p>This is the script provided by scannet with some modifications for multi-threaded download</p>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_file">
+<code class="sig-name descname">download_file</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">out_file</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_label_map">
+<code class="sig-name descname">download_label_map</code><span class="sig-paren">(</span><em class="sig-param">out_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_label_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_release">
+<code class="sig-name descname">download_release</code><span class="sig-paren">(</span><em class="sig-param">release_scans</em>, <em class="sig-param">out_dir</em>, <em class="sig-param">file_types</em>, <em class="sig-param">use_v1_sens</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_release" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_release_in_parallel">
+<code class="sig-name descname">download_release_in_parallel</code><span class="sig-paren">(</span><em class="sig-param">release_scans</em>, <em class="sig-param">out_dir</em>, <em class="sig-param">file_types</em>, <em class="sig-param">use_v1_sens</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_release_in_parallel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_scan">
+<code class="sig-name descname">download_scan</code><span class="sig-paren">(</span><em class="sig-param">scan_id</em>, <em class="sig-param">out_dir</em>, <em class="sig-param">file_types</em>, <em class="sig-param">use_v1_sens</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_scan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_task_data">
+<code class="sig-name descname">download_task_data</code><span class="sig-paren">(</span><em class="sig-param">out_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.download_task_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.get_release_scans">
+<code class="sig-name descname">get_release_scans</code><span class="sig-paren">(</span><em class="sig-param">release_file</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.get_release_scans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.scannet_download_script.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.scannet_dataset.local_dataset_computations.normal_computation_meshlab">
+<span id="normal-computation-with-meshlab"></span><h2>Normal Computation with Meshlab<a class="headerlink" href="#module-attention_points.scannet_dataset.local_dataset_computations.normal_computation_meshlab" title="Permalink to this headline">¶</a></h2>
+<p>This script allows to use a Meshlab Server to compute and extract normal vectors from ply files
+This script is designed for Windows commands, to adapt the commands, see <a class="reference external" href="https://github.com/TheNerdJedi/MeshlabAuto">https://github.com/TheNerdJedi/MeshlabAuto</a></p>
+</div>
+<div class="section" id="module-attention_points.scannet_dataset.local_dataset_computations.normal_extraction">
+<span id="normal-extraction"></span><h2>Normal Extraction<a class="headerlink" href="#module-attention_points.scannet_dataset.local_dataset_computations.normal_extraction" title="Permalink to this headline">¶</a></h2>
+<p>Is used to copy normal vectors from .ply to .npy</p>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.normal_extraction.normals_to_np_array">
+<code class="sig-name descname">normals_to_np_array</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.normal_extraction.normals_to_np_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>extracts the normal vectors from a ply file and stores them  in a numpy array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – path to ply file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>normals (Nx3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.normal_extraction.read_normal_vectors">
+<code class="sig-name descname">read_normal_vectors</code><span class="sig-paren">(</span><em class="sig-param">source_dir: str = 'C:/scannet_normal/'</em>, <em class="sig-param">target_dir: str = 'C:/scannet-pre/'</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.normal_extraction.read_normal_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads normal vectors from all ply files in source dir and saves them in target dir as numpy arrays
+note that these ply files can be created with the normal_computation_meshlab script</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_dir</strong> – dir of source files</p></li>
+<li><p><strong>target_dir</strong> – dir to save numpy arrays</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.scannet_dataset.local_dataset_computations.ply_to_npy">
+<span id="convert-ply-files-to-numpy-arrays"></span><h2>Convert ply files to Numpy Arrays<a class="headerlink" href="#module-attention_points.scannet_dataset.local_dataset_computations.ply_to_npy" title="Permalink to this headline">¶</a></h2>
+<p>provides methods to use ScanNet Dataset</p>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.copy_data_to_numpy">
+<code class="sig-name descname">copy_data_to_numpy</code><span class="sig-paren">(</span><em class="sig-param">source_dir: str = 'C:/scannet'</em>, <em class="sig-param">target_dir: str = 'C:/scannet-pre/'</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.copy_data_to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterates over a folder with scene and label ply files and extracts coordinates, color and labels for each scene
+saves the result in the target directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_dir</strong> – directory containing ply files</p></li>
+<li><p><strong>target_dir</strong> – directory to store numpy files at</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.copy_test_data_to_numpy">
+<code class="sig-name descname">copy_test_data_to_numpy</code><span class="sig-paren">(</span><em class="sig-param">source_dir: str = 'C:/scannet'</em>, <em class="sig-param">target_dir: str = 'C:/scannet-pre/'</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.copy_test_data_to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterates over a folder with test ply files and extracts point coordinates and color for each scene
+saves the result in the target directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_dir</strong> – directory containing ply files</p></li>
+<li><p><strong>target_dir</strong> – directory to store numpy files at</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.read_label">
+<code class="sig-name descname">read_label</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.read_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a ply file and returns labels</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – path to ply file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>labels(N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.read_mesh_vertices">
+<code class="sig-name descname">read_mesh_vertices</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, numpy.ndarray]<a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.read_mesh_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a ply file and extracts vertex coordinates and colors</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – path to ply file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points(Nx3), colors(Nx3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.rename_files">
+<code class="sig-name descname">rename_files</code><span class="sig-paren">(</span><em class="sig-param">dir: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.rename_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>renames files to omit unnecessary endings</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir</strong> – directory of files to rename</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.to_np_array">
+<code class="sig-name descname">to_np_array</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]<a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.to_np_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes ply file and extracts point coordinates, colors, and labels
+warning, this method only works on label files, which have not the original color but the labels color assigned
+-&gt; use with care</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – path to ply file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>vertices(Nx3), colors(Nx3), labels(N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.visualize">
+<code class="sig-name descname">visualize</code><span class="sig-paren">(</span><em class="sig-param">file: str = 'C:/scannet/scene0000_00_vh_clean_2.ply'</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.local_dataset_computations.ply_to_npy.visualize" title="Permalink to this definition">¶</a></dt>
+<dd><p>visualizes ply file with pptk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file</strong> – path to file to visualize</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dataset.html" class="btn btn-neutral float-right" title="Dataset Methods" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to PointNet++ with Attention and Additional Features’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tim Pfeilfe, Maximilian Rieger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

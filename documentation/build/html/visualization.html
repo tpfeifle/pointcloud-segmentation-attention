@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Visualizations &mdash; PointNet++ with Attention and Additional Features 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Training File" href="training.html" />
+    <link rel="prev" title="Benchmark Files" href="benchmark.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PointNet++ with Attention and Additional Features
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">New Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark Files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Visualizations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.visualization.qualitative_animations">Rotating Prediction Animations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.visualization.labels_during_training">Predictions of Training Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.visualization.extract_scores_from_summaries">Extract Tensorboard Logs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training File</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PointNet++ with Attention and Additional Features</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Visualizations</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/visualization.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="visualizations">
+<h1>Visualizations<a class="headerlink" href="#visualizations" title="Permalink to this headline">¶</a></h1>
+<p>Here are methods for visualization.</p>
+<div class="section" id="module-attention_points.visualization.qualitative_animations">
+<span id="rotating-prediction-animations"></span><h2>Rotating Prediction Animations<a class="headerlink" href="#module-attention_points.visualization.qualitative_animations" title="Permalink to this headline">¶</a></h2>
+<p>Animates rotations of the ground-truth labels of scenes, as well as of their predicted labels.
+The rendered rotated views are stored as images and can be converted to videos with <code class="docutils literal notranslate"><span class="pre">fmpeg</span></code>:</p>
+<blockquote>
+<div><p>ffmpeg -i “scene0XXX_0X/frame_%03d.png” -c:v mpeg4 -qscale:v 0 -r 24 scene0XXX_0X.mp4</p>
+</div></blockquote>
+<p>Inputs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Points of a scene as .npy file (Nx3)</p></li>
+<li><p>Labels (ground truth) of a scene as .npy file (Nx1)</p></li>
+<li><p>Predicted labels of a scene as .npy file (Nx1)</p></li>
+</ul>
+</div></blockquote>
+<dl class="function">
+<dt id="attention_points.visualization.qualitative_animations.animate_and_store">
+<code class="sig-name descname">animate_and_store</code><span class="sig-paren">(</span><em class="sig-param">view</em>, <em class="sig-param">points: numpy.ndarray</em>, <em class="sig-param">scene_name: str</em>, <em class="sig-param">sub_path: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.visualization.qualitative_animations.animate_and_store" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates each scene around its center of gravity and stores the rendered frames at the path <cite>path_to_recordings</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>view</strong> – Reference to the pptk-view to be rendered</p></li>
+<li><p><strong>points</strong> – The list of points to be rendered (needed for center of gravity) (Nx3)</p></li>
+<li><p><strong>scene_name</strong> – Name of the scene (frames stored with this name)</p></li>
+<li><p><strong>sub_path</strong> – sub-folder of the recordings where the frames should be stored</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.visualization.qualitative_animations.animate_scenes">
+<code class="sig-name descname">animate_scenes</code><span class="sig-paren">(</span><em class="sig-param">scenes: List[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.visualization.qualitative_animations.animate_scenes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders each of the provided scene names with pptk-viewer, rotates the scene and stores each rotated frame
+as a separate file. For each scene the ground-truth as well as the predicted scene-labels are animated and stored</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scenes</strong> – Array with the name of the scenes to be animated</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.visualization.qualitative_animations.load_from_scene_name">
+<code class="sig-name descname">load_from_scene_name</code><span class="sig-paren">(</span><em class="sig-param">scene_name: str</em>, <em class="sig-param">pre_files_dir='/Users/tim/Downloads/'</em><span class="sig-paren">)</span> &#x2192; List[numpy.ndarray]<a class="headerlink" href="#attention_points.visualization.qualitative_animations.load_from_scene_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.visualization.qualitative_animations.load_predictions">
+<code class="sig-name descname">load_predictions</code><span class="sig-paren">(</span><em class="sig-param">scene_name: str</em>, <em class="sig-param">model: str</em>, <em class="sig-param">files_dir='/Users/tim/Downloads/for_visualization'</em><span class="sig-paren">)</span> &#x2192; List[numpy.ndarray]<a class="headerlink" href="#attention_points.visualization.qualitative_animations.load_predictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the numpy-arrays (points and labels) for the specified model from disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene_name</strong> – Name of the scene to be loaded</p></li>
+<li><p><strong>files_dir</strong> – Directory where the scenes reside</p></li>
+<li><p><strong>model</strong> – Name of the model that should be loaded, element of [‘baseline’, ‘baseline_features’, ‘groundtruth’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.visualization.qualitative_animations.normalize_colors">
+<code class="sig-name descname">normalize_colors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.visualization.qualitative_animations.normalize_colors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize colors to range [0, 1]: needed for pptk-viewer
+:return:</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.visualization.labels_during_training">
+<span id="predictions-of-training-time"></span><h2>Predictions of Training Time<a class="headerlink" href="#module-attention_points.visualization.labels_during_training" title="Permalink to this headline">¶</a></h2>
+<p>Animate the prediction changes in a scene over training time by reading the predictions at different time steps during
+the training process</p>
+<p>Input:</p>
+<ul class="simple">
+<li><p>Path to a pickle file containing the points of a scene</p></li>
+<li><p>List of paths to pickle files containing the labels at different time steps of the training process</p></li>
+</ul>
+<dl class="function">
+<dt id="attention_points.visualization.labels_during_training.animate_prediction_changes">
+<code class="sig-name descname">animate_prediction_changes</code><span class="sig-paren">(</span><em class="sig-param">points_path: str, files_to_visualize: List[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.visualization.labels_during_training.animate_prediction_changes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points_path</strong> – Path to pickle file containing the points of a scene</p></li>
+<li><p><strong>files_to_visualize</strong> – List of paths to pickle files containing the labels at different time steps
+of the training process</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.visualization.labels_during_training.normalize_colors">
+<code class="sig-name descname">normalize_colors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.visualization.labels_during_training.normalize_colors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize colors to range [0, 1]: needed for pptk-viewer
+:return:</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.visualization.extract_scores_from_summaries">
+<span id="extract-tensorboard-logs"></span><h2>Extract Tensorboard Logs<a class="headerlink" href="#module-attention_points.visualization.extract_scores_from_summaries" title="Permalink to this headline">¶</a></h2>
+<p>Extracts training scores from the tensorboard logs and plots them with matplotlib.</p>
+<p>Plotted Models:</p>
+<ul class="simple">
+<li><p>Attention Models (using attention in layer X)</p></li>
+<li><p>PointNet++ with Additional Features</p></li>
+</ul>
+<dl class="function">
+<dt id="attention_points.visualization.extract_scores_from_summaries.plot_scores_attention_models">
+<code class="sig-name descname">plot_scores_attention_models</code><span class="sig-paren">(</span><em class="sig-param">ylabel='mIoU'</em>, <em class="sig-param">tag='iou'</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.visualization.extract_scores_from_summaries.plot_scores_attention_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the tensorboard logs for the <cite>attention-models</cite> from disk and plots the specified metric</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ylabel</strong> – label for the y-axis</p></li>
+<li><p><strong>tag</strong> – element of [‘loss’, ‘accuracy’, iou’] that should be plotted</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.visualization.extract_scores_from_summaries.plot_scores_feature_model">
+<code class="sig-name descname">plot_scores_feature_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.visualization.extract_scores_from_summaries.plot_scores_feature_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the tensorboard logs for the baseline (PointNet++) and the model with additional features from disk
+and plots the iou metric</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="training.html" class="btn btn-neutral float-right" title="Training File" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="benchmark.html" class="btn btn-neutral float-left" title="Benchmark Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tim Pfeilfe, Maximilian Rieger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

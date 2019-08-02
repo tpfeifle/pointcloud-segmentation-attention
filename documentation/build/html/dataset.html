@@ -1,0 +1,782 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Dataset Methods &mdash; PointNet++ with Attention and Additional Features 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="New Models" href="models.html" />
+    <link rel="prev" title="Preprocessing Methods" href="preprocessing.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PointNet++ with Attention and Additional Features
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing Methods</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dataset Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.precompute_dataset">Precomputation of Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.generator_dataset">Generators to Load Files from Disk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.data_transformation">Data Transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.compute_class_weights">Compute Class Weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.scannet_dataset.complete_scene_loader">Load Complete Scenes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">New Models</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PointNet++ with Attention and Additional Features</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Dataset Methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dataset.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dataset-methods">
+<h1>Dataset Methods<a class="headerlink" href="#dataset-methods" title="Permalink to this headline">¶</a></h1>
+<p>Here are all methods listed, which are used for the dataset.</p>
+<div class="section" id="module-attention_points.scannet_dataset.precompute_dataset">
+<span id="precomputation-of-data"></span><h2>Precomputation of Data<a class="headerlink" href="#module-attention_points.scannet_dataset.precompute_dataset" title="Permalink to this headline">¶</a></h2>
+<p>This module provides methods to precompute, save and load training data.
+This allows to speed up training, as the random subscenes do not have to be generated on the fly.</p>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.eval_dataset_from_generator">
+<code class="sig-name descname">eval_dataset_from_generator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.Dataset<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.eval_dataset_from_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow dataset from eval data generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>tf dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.generate_eval_data">
+<code class="sig-name descname">generate_eval_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.generate_eval_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>generator which iterates over precomputed validation set and yields single subsets
+also yields the scene name, a boolean mask for points with meaningful predictions and original point indices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(points(Nx3), labels(N), colors(Nx3), normals(Nx3), scene_name, mask(N), indices(N))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.generate_test_data">
+<code class="sig-name descname">generate_test_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.generate_test_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>generator which iterates over precomputed test set and yields single subsets
+also yields the scene name, a boolean mask for points with meaningful predictions and original point indices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(points(Nx3), colors(Nx3), normals(Nx3), scene_name, mask(N), indices(N))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.get_precomputed_train_data_set">
+<code class="sig-name descname">get_precomputed_train_data_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.Dataset<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.get_precomputed_train_data_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow dataset from precomputed train data generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>tf dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.get_precomputed_train_subset_data_set">
+<code class="sig-name descname">get_precomputed_train_subset_data_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.Dataset<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.get_precomputed_train_subset_data_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow dataset from precomputed subset of train data generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>tf dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.get_precomputed_val_data_set">
+<code class="sig-name descname">get_precomputed_val_data_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.Dataset<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.get_precomputed_val_data_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow dataset from precomputed val data generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>tf dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.get_precomputed_val_subset_data_set">
+<code class="sig-name descname">get_precomputed_val_subset_data_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.Dataset<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.get_precomputed_val_subset_data_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow dataset from precomputed subset of val data generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>tf dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.precompute_subset_train_data">
+<code class="sig-name descname">precompute_subset_train_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.precompute_subset_train_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>precomputes data from a subset of the scenes in the training set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.precompute_train_data">
+<code class="sig-name descname">precompute_train_data</code><span class="sig-paren">(</span><em class="sig-param">epochs: int</em>, <em class="sig-param">elements_per_epoch: int</em>, <em class="sig-param">out_dir: str</em>, <em class="sig-param">dataset: tensorflow.python.data.ops.dataset_ops.Dataset</em>, <em class="sig-param">add_epoch: int = 0</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.precompute_train_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>precomputes train data
+files saved are a tuple of numpy arrays:
+(points(Nx3), labels(N), colors(N,3), normals(Nx3), sample_weight(N))
+N is the number of points needed by the model (default 8192)
+naming scheme: epoch-scene.pickle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epochs</strong> – number of epochs to precompute (random chunks do not cover whole scenes, set &gt;=20)</p></li>
+<li><p><strong>elements_per_epoch</strong> – number of elements loaded from dataset for a single epoch</p></li>
+<li><p><strong>out_dir</strong> – directory to save files to</p></li>
+<li><p><strong>dataset</strong> – tensorflow dataset to load scenes from</p></li>
+<li><p><strong>add_epoch</strong> – offset of epoch name (to continue interrupted precomputation)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.precompute_val_data">
+<code class="sig-name descname">precompute_val_data</code><span class="sig-paren">(</span><em class="sig-param">elements: int</em>, <em class="sig-param">out_dir: str</em>, <em class="sig-param">dataset: tensorflow.python.data.ops.dataset_ops.Dataset = &lt;MapDataset shapes: ((?</em>, <em class="sig-param">3)</em>, <em class="sig-param">(?</em>, <em class="sig-param">)</em>, <em class="sig-param">(?</em>, <em class="sig-param">3)</em>, <em class="sig-param">(?</em>, <em class="sig-param">3))</em>, <em class="sig-param">types: (tf.float32</em>, <em class="sig-param">tf.int32</em>, <em class="sig-param">tf.int32</em>, <em class="sig-param">tf.float32)&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.precompute_val_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>precomputes validation data
+files saved are a tuple of numpy arrays:
+(points(Nx3), labels(N), colors(N,3), normals(Nx3), sample_weight(N))
+N is the number of points needed by the model (default 8192)
+naming scheme: scene-subscene.pickle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elements</strong> – number of elements to load from dataset</p></li>
+<li><p><strong>out_dir</strong> – directory to save files to</p></li>
+<li><p><strong>dataset</strong> – tensorflow dataset to load scenes from</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.precomputed_train_data_generator">
+<code class="sig-name descname">precomputed_train_data_generator</code><span class="sig-paren">(</span><em class="sig-param">dir: str = '/home/tim/data/train_precomputed'</em><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.precomputed_train_data_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterates over precomputed train data and yields single chunks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir</strong> – directory of precomputed train data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.precomputed_train_subset_data_generator">
+<code class="sig-name descname">precomputed_train_subset_data_generator</code><span class="sig-paren">(</span><em class="sig-param">dir: str = '/home/tim/data/train_subset_precomputed'</em><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.precomputed_train_subset_data_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterates over precomputed subset of train data and yields single chunks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir</strong> – directory of precomputed subset of train data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.precomputed_val_data_generator">
+<code class="sig-name descname">precomputed_val_data_generator</code><span class="sig-paren">(</span><em class="sig-param">dir: str = '/home/tim/data/val_precomputed'</em><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.precomputed_val_data_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterates over precomputed val data and yields single chunks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir</strong> – directory of precomputed val data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.precomputed_val_subset_data_generator">
+<code class="sig-name descname">precomputed_val_subset_data_generator</code><span class="sig-paren">(</span><em class="sig-param">dir: str = '/home/tim/data/val_precomputed'</em><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.precomputed_val_subset_data_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterates over precomputed subset of val data and yields single chunks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir</strong> – directory of precomputed subset of val data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.precompute_dataset.test_dataset_from_generator">
+<code class="sig-name descname">test_dataset_from_generator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.Dataset<a class="headerlink" href="#attention_points.scannet_dataset.precompute_dataset.test_dataset_from_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow dataset from test data generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>tf dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.scannet_dataset.generator_dataset">
+<span id="generators-to-load-files-from-disk"></span><h2>Generators to Load Files from Disk<a class="headerlink" href="#module-attention_points.scannet_dataset.generator_dataset" title="Permalink to this headline">¶</a></h2>
+<p>this module provides several generators which yield scenes of the dataset
+these generators are used to create tensorflow datasets</p>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.get_dataset">
+<code class="sig-name descname">get_dataset</code><span class="sig-paren">(</span><em class="sig-param">train: str</em><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.Dataset<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.get_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a tensorflow dataset with the data specified in train</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>train</strong> – can be [“train”, “val”, “eval”, “test”, “train_subset”]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the tensorflow dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.load_from_scene_name">
+<code class="sig-name descname">load_from_scene_name</code><span class="sig-paren">(</span><em class="sig-param">scene_name: str</em>, <em class="sig-param">pre_files_dir: str = '/home/tim/scannet-pre/'</em><span class="sig-paren">)</span> &#x2192; List[numpy.ndarray]<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.load_from_scene_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads points, labels, colors and normals from the preprocessed data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene_name</strong> – name of a scene, e.g. “scene0720_00”</p></li>
+<li><p><strong>pre_files_dir</strong> – location of preprocessed files</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[points (Nx3), labels (N), colors (Nx3), normals(Nx3)]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.load_from_scene_name_test">
+<code class="sig-name descname">load_from_scene_name_test</code><span class="sig-paren">(</span><em class="sig-param">scene_name: str</em>, <em class="sig-param">pre_files_dir: str = '/home/tim/scannet_test_data/'</em><span class="sig-paren">)</span> &#x2192; List[numpy.ndarray]<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.load_from_scene_name_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads points, colors and normals from the preprocessed data
+does not load labels, so it can be used for test data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene_name</strong> – name of a scene, e.g. “scene0720_00”</p></li>
+<li><p><strong>pre_files_dir</strong> – location of preprocessed files</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[points (Nx3), colors (Nx3), normals(Nx3)]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.scene_name_generator">
+<code class="sig-name descname">scene_name_generator</code><span class="sig-paren">(</span><em class="sig-param">train: str</em>, <em class="sig-param">base_dir: str = '/home/tim/.max_remote_deployment/'</em>, <em class="sig-param">overfit: bool = False</em><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.scene_name_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>yields the scene names of either train, val or test set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train</strong> – one of {‘train’, ‘val’, ‘test’, ‘train_subset’}</p></li>
+<li><p><strong>base_dir</strong> – the directory, where the code is stored at</p></li>
+<li><p><strong>overfit</strong> – if true, this data loader always returns the same scene</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>yields the scene names</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.tf_eval_generator">
+<code class="sig-name descname">tf_eval_generator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.tf_eval_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>yields validation scenes with scene name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(points, labels, colors, normals, scene_name)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.tf_test_generator">
+<code class="sig-name descname">tf_test_generator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.tf_test_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>yields test scenes with scene name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(points, colors, normals, scene_name)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.tf_train_generator">
+<code class="sig-name descname">tf_train_generator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.tf_train_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>yields train scenes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(points, labels, colors, normals)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.tf_train_subset_generator">
+<code class="sig-name descname">tf_train_subset_generator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.tf_train_subset_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>yields subset scenes
+:return: (points, labels, colors, normals)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.generator_dataset.tf_val_generator">
+<code class="sig-name descname">tf_val_generator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<a class="headerlink" href="#attention_points.scannet_dataset.generator_dataset.tf_val_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>yields validation scenes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(points, labels, colors, normals)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.scannet_dataset.data_transformation">
+<span id="data-transformations"></span><h2>Data Transformations<a class="headerlink" href="#module-attention_points.scannet_dataset.data_transformation" title="Permalink to this headline">¶</a></h2>
+<p>This module contains methods to transform the dataset These transformations include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>mapping the labels from nyu40 to range [0, 20]</p></li>
+<li><p>rotating a point cloud</p></li>
+<li><p>getting a random chunk of a scene</p></li>
+<li><p>getting chunks for every area of a scene</p></li>
+<li><p>getting all points of a scene grouped by chunks</p></li>
+</ul>
+</div></blockquote>
+<p>Some of these methods are implemented in both tensorflow and numpy.
+When executing on CPU the numpy versions are considerably faster.</p>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.get_all_subsets_for_scene">
+<code class="sig-name descname">get_all_subsets_for_scene</code><span class="sig-paren">(</span><em class="sig-param">points: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">labels: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">colors: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">normals: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">npoints: int = 8192</em><span class="sig-paren">)</span> &#x2192; Tuple[tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor]<a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.get_all_subsets_for_scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow function to get chunks with K points for every area of a scene
+warning: this method is not tested yet -&gt; use with care</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – (Nx3)</p></li>
+<li><p><strong>labels</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p></li>
+<li><p><strong>colors</strong> – (Nx3)</p></li>
+<li><p><strong>normals</strong> – (Nx3)</p></li>
+<li><p><strong>npoints</strong> – <ol class="upperalpha simple" start="11">
+<li><p>count of points to output (default 8192)</p></li>
+</ol>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points_stack (X,K,3), labels_stack (X,K), colors_stack (X,K,3), normals_stack (X,K,3),
+sample_weight_stack(X,K)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.get_all_subsets_for_scene_numpy">
+<code class="sig-name descname">get_all_subsets_for_scene_numpy</code><span class="sig-paren">(</span><em class="sig-param">points: numpy.ndarray</em>, <em class="sig-param">labels: numpy.ndarray</em>, <em class="sig-param">colors: numpy.ndarray</em>, <em class="sig-param">normals: numpy.ndarray</em>, <em class="sig-param">npoints: str = 8192</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]<a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.get_all_subsets_for_scene_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>numpy function to get chunks with K points for every area of a scene
+this method is derived from Charles Qi’s implementation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – (Nx3)</p></li>
+<li><p><strong>labels</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p></li>
+<li><p><strong>colors</strong> – (Nx3)</p></li>
+<li><p><strong>normals</strong> – (Nx3)</p></li>
+<li><p><strong>npoints</strong> – <ol class="upperalpha simple" start="11">
+<li><p>count of points to output (default 8192)</p></li>
+</ol>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points_stack (X,K,3), labels_stack (X,K), colors_stack (X,K,3), normals_stack (X,K,3),
+sample_weight_stack(X,K)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.get_subset">
+<code class="sig-name descname">get_subset</code><span class="sig-paren">(</span><em class="sig-param">points: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">labels: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">colors: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">normals: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">npoints: int = 8192</em><span class="sig-paren">)</span> &#x2192; Tuple[tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor]<a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.get_subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow function to get a random chunk of a scene which has exactly K points</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – (Nx3)</p></li>
+<li><p><strong>labels</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p></li>
+<li><p><strong>colors</strong> – (Nx3)</p></li>
+<li><p><strong>normals</strong> – (Nx3)</p></li>
+<li><p><strong>npoints</strong> – <ol class="upperalpha simple" start="11">
+<li><p>count of points to output (default 8192)</p></li>
+</ol>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points(Kx3), labels(K), colors(Kx3), normals(Kx3), sample_weights(K)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.get_transformed_dataset">
+<code class="sig-name descname">get_transformed_dataset</code><span class="sig-paren">(</span><em class="sig-param">train: str</em>, <em class="sig-param">prefetch: bool = True</em>, <em class="sig-param">threads: int = 4</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.get_transformed_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow dataset, to load and transform files asynchronous</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train</strong> – one of  {“train”, “val”, “train_subset”}</p></li>
+<li><p><strong>prefetch</strong> – prefetches data if True</p></li>
+<li><p><strong>threads</strong> – number of parallel threads to use</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.label_map">
+<code class="sig-name descname">label_map</code><span class="sig-paren">(</span><em class="sig-param">points: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">labels: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">colors: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">normals: tensorflow.python.framework.ops.Tensor</em><span class="sig-paren">)</span> &#x2192; Tuple[tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor]<a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.label_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow function to map labels from nyu40 to range [0, 20]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – (Nx3)</p></li>
+<li><p><strong>labels</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p></li>
+<li><p><strong>colors</strong> – (Nx3)</p></li>
+<li><p><strong>normals</strong> – (Nx3)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points(Nx3), mapped labels(N), colors(Nx3), normals(Nx3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.label_map_more_parameters">
+<code class="sig-name descname">label_map_more_parameters</code><span class="sig-paren">(</span><em class="sig-param">labels: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.label_map_more_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>numpy function to map labels from nyu40 to range [0, 20]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>mapped labels (N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.label_map_numpy">
+<code class="sig-name descname">label_map_numpy</code><span class="sig-paren">(</span><em class="sig-param">points: numpy.ndarray</em>, <em class="sig-param">labels: numpy.ndarray</em>, <em class="sig-param">colors: numpy.ndarray</em>, <em class="sig-param">normals: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]<a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.label_map_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>numpy function to map labels from nyu40 to range [0, 20]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – (Nx3)</p></li>
+<li><p><strong>labels</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p></li>
+<li><p><strong>colors</strong> – (Nx3)</p></li>
+<li><p><strong>normals</strong> – (Nx3)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points(Nx3), mapped labels(N), colors(Nx3), normals(Nx3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.data_transformation.random_rotate">
+<code class="sig-name descname">random_rotate</code><span class="sig-paren">(</span><em class="sig-param">points: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">labels: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">colors: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">normals: tensorflow.python.framework.ops.Tensor</em>, <em class="sig-param">sample_weight: tensorflow.python.framework.ops.Tensor</em><span class="sig-paren">)</span> &#x2192; Tuple[tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor]<a class="headerlink" href="#attention_points.scannet_dataset.data_transformation.random_rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>tensorflow function to randomly rotate point cloud</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – (Nx3)</p></li>
+<li><p><strong>labels</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p></li>
+<li><p><strong>colors</strong> – (Nx3)</p></li>
+<li><p><strong>normals</strong> – (Nx3)</p></li>
+<li><p><strong>sample_weight</strong> – <ol class="upperalpha simple" start="14">
+<li></li>
+</ol>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>rotated points(Nx3), labels(N), colors(Nx3), rotated normals(Nx3), sample_weight: (N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.scannet_dataset.compute_class_weights">
+<span id="compute-class-weights"></span><h2>Compute Class Weights<a class="headerlink" href="#module-attention_points.scannet_dataset.compute_class_weights" title="Permalink to this headline">¶</a></h2>
+<p>This module can analyze the distribution of class labels and compute weights accordingly
+The formula 1 / log(1.2 + counts / sum(counts)) is adapted from Charles Qi’s implementation</p>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.compute_class_weights.get_weights">
+<code class="sig-name descname">get_weights</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#attention_points.scannet_dataset.compute_class_weights.get_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the weights for classes to use for training
+note that class 0 is unannotated and should be weighted with 0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>weights (21)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.scannet_dataset.complete_scene_loader">
+<span id="load-complete-scenes"></span><h2>Load Complete Scenes<a class="headerlink" href="#module-attention_points.scannet_dataset.complete_scene_loader" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="attention_points.scannet_dataset.complete_scene_loader.get_all_subsets_with_all_points_for_scene_features">
+<code class="sig-name descname">get_all_subsets_with_all_points_for_scene_features</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">features</em>, <em class="sig-param">get_sample_weights</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.complete_scene_loader.get_all_subsets_with_all_points_for_scene_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>numpy function to get all points of a scene grouped by chunks
+this method can be used to get values for all points of a scene e.g. the test set
+it also returns the original indices of all samples to map values or predictions back to original points
+:return: point_sets, feature sets, masks_sets, points_orig_idxs_sets</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.complete_scene_loader.get_all_subsets_with_all_points_for_scene_numpy">
+<code class="sig-name descname">get_all_subsets_with_all_points_for_scene_numpy</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">labels</em>, <em class="sig-param">colors</em>, <em class="sig-param">normals</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.complete_scene_loader.get_all_subsets_with_all_points_for_scene_numpy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="attention_points.scannet_dataset.complete_scene_loader.get_all_subsets_with_all_points_for_scene_numpy_test">
+<code class="sig-name descname">get_all_subsets_with_all_points_for_scene_numpy_test</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">colors</em>, <em class="sig-param">normals</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.scannet_dataset.complete_scene_loader.get_all_subsets_with_all_points_for_scene_numpy_test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="models.html" class="btn btn-neutral float-right" title="New Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="preprocessing.html" class="btn btn-neutral float-left" title="Preprocessing Methods" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tim Pfeilfe, Maximilian Rieger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

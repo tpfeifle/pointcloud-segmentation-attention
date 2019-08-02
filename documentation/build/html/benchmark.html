@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Benchmark Files &mdash; PointNet++ with Attention and Additional Features 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="visualization.html" />
+    <link rel="prev" title="New Models" href="models.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PointNet++ with Attention and Additional Features
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">New Models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Benchmark Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.benchmark.evaluate">Evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.benchmark.generate_groundtruth">Create Ground Truth Labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-attention_points.benchmark.generate_predictions">Create Prediction Labels</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PointNet++ with Attention and Additional Features</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Benchmark Files</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/benchmark.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="benchmark-files">
+<h1>Benchmark Files<a class="headerlink" href="#benchmark-files" title="Permalink to this headline">¶</a></h1>
+<p>Here are all methods listed, which are used to compute predictions and scores for the ScanNet benchmark.</p>
+<div class="section" id="module-attention_points.benchmark.evaluate">
+<span id="evaluate"></span><h2>Evaluate<a class="headerlink" href="#module-attention_points.benchmark.evaluate" title="Permalink to this headline">¶</a></h2>
+<p>Evaluates semantic label task
+Adapted from ScanNet benchmark scripts: <a class="reference external" href="https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts">https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts</a></p>
+<blockquote>
+<div><p>Authors of ScanNet:
+Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Niessner, Matthias</p>
+</div></blockquote>
+<p>Input:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>path to .txt prediction files</p></li>
+<li><p>path to .txt ground truth files</p></li>
+<li><p>output file to write results to</p></li>
+</ul>
+</div></blockquote>
+<p>Note that only the valid classes are used for evaluation,
+i.e., any ground truth label not in the valid label set
+is ignored in the evaluation.</p>
+<dl class="function">
+<dt id="attention_points.benchmark.evaluate.evaluate">
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param">pred_files: List[str], gt_files: List[str], output_file_path: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.evaluate.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the IoU for each label in each of the pred_files and write the summary output to the output_file_path</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred_files</strong> – Files containing the predictions for each scene</p></li>
+<li><p><strong>gt_files</strong> – Files containing the groundtruth for each scene</p></li>
+<li><p><strong>output_file_path</strong> – File to which the output should be written</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.evaluate.evaluate_scan">
+<code class="sig-name descname">evaluate_scan</code><span class="sig-paren">(</span><em class="sig-param">pred_file: str</em>, <em class="sig-param">gt_file: str</em>, <em class="sig-param">confusion: numpy.ndarray</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.evaluate.evaluate_scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update confusion matrix for the specified scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred_file</strong> – file containing the label predictions for one scene</p></li>
+<li><p><strong>gt_file</strong> – file containing the label groundtruth for one scene</p></li>
+<li><p><strong>confusion</strong> – confusion matrix to be updated by this scene</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.evaluate.get_iou">
+<code class="sig-name descname">get_iou</code><span class="sig-paren">(</span><em class="sig-param">label_id: int</em>, <em class="sig-param">confusion: numpy.ndarray</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.evaluate.get_iou" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the IoU for the specified label_id by consulting the confusion matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label_id</strong> – Label for which the IoU should be determined</p></li>
+<li><p><strong>confusion</strong> – Confusion matrix (from the evaluation)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.evaluate.load_ids">
+<code class="sig-name descname">load_ids</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.evaluate.load_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the predicted label ids from the specified filename</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – Name of the label file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.evaluate.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.evaluate.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the IoU scores of the predicted labels for all the scenes by comparing with the groundtruth labels
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.evaluate.write_result_file">
+<code class="sig-name descname">write_result_file</code><span class="sig-paren">(</span><em class="sig-param">confusion: numpy.ndarray, ious: Dict[int, float], filename: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.evaluate.write_result_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the evaluation result (IoUs and confusion matrix) to the specified filename</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>confusion</strong> – Confusion matrix (from the evaluation)</p></li>
+<li><p><strong>ious</strong> – IoUs for each label</p></li>
+<li><p><strong>filename</strong> – Filename to output the evaluation results to</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.benchmark.generate_groundtruth">
+<span id="create-ground-truth-labels"></span><h2>Create Ground Truth Labels<a class="headerlink" href="#module-attention_points.benchmark.generate_groundtruth" title="Permalink to this headline">¶</a></h2>
+<p>Exports the groundtruth labels for the scans in the evaluation format.
+Adapted from ScanNet benchmark scripts: <a class="reference external" href="https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts">https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts</a></p>
+<blockquote>
+<div><p>Authors of ScanNet:
+Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Niessner, Matthias</p>
+</div></blockquote>
+<p>Input:</p>
+<ul class="simple">
+<li><p>the <a href="#id1"><span class="problematic" id="id2">*</span></a>_vh_clean_2.ply mesh</p></li>
+<li><p>the labels defined by the <a href="#id3"><span class="problematic" id="id4">*</span></a>.aggregation.json and <a href="#id5"><span class="problematic" id="id6">*</span></a>_vh_clean_2.0.010000.segs.json files</p></li>
+</ul>
+<dl class="function">
+<dt id="attention_points.benchmark.generate_groundtruth.export">
+<code class="sig-name descname">export</code><span class="sig-paren">(</span><em class="sig-param">agg_file: str</em>, <em class="sig-param">seg_file: str</em>, <em class="sig-param">label_map: str</em>, <em class="sig-param">output_file: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.generate_groundtruth.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports the specified groundtruth scene in the benchmark evaluation format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agg_file</strong> – Path to the aggregation file of the scene</p></li>
+<li><p><strong>seg_file</strong> – Path to the segmentation file of the scene</p></li>
+<li><p><strong>label_map</strong> – Path to the label_map (nyu40-scannet)</p></li>
+<li><p><strong>output_file</strong> – Path to which the output should be written</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_groundtruth.export_ids">
+<code class="sig-name descname">export_ids</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">ids: numpy.ndarray</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.generate_groundtruth.export_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export the provided ids to the provided filename
+:param filename: Path to export to
+:param ids: Ids that should be exported
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_groundtruth.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.generate_groundtruth.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports for each groundtruth-label file in the provided folder the labels in the format required for
+the ScanNet benchmark
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_groundtruth.read_aggregation">
+<code class="sig-name descname">read_aggregation</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.generate_groundtruth.read_aggregation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the aggregation data for the scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – Path to the aggregation data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_groundtruth.read_label_mapping">
+<code class="sig-name descname">read_label_mapping</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">label_from='raw_category'</em>, <em class="sig-param">label_to='nyu40id'</em><span class="sig-paren">)</span> &#x2192; Dict<a class="headerlink" href="#attention_points.benchmark.generate_groundtruth.read_label_mapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the label mapping from the provided filename</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – Path to the label mapping</p></li>
+<li><p><strong>label_from</strong> – Name of the field that contains the label</p></li>
+<li><p><strong>label_to</strong> – Name of the value to map to</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Remapped labels</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_groundtruth.read_segmentation">
+<code class="sig-name descname">read_segmentation</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.generate_groundtruth.read_segmentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the segmentation data for the scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – Path to the segmentation data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_groundtruth.represents_int">
+<code class="sig-name descname">represents_int</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#attention_points.benchmark.generate_groundtruth.represents_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes sure that string s represents an int
+:param s: String to be checked
+:return: Whether or not string represents an int</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-attention_points.benchmark.generate_predictions">
+<span id="create-prediction-labels"></span><h2>Create Prediction Labels<a class="headerlink" href="#module-attention_points.benchmark.generate_predictions" title="Permalink to this headline">¶</a></h2>
+<p>Predict the labels for all points in all scenes of the validation dataset.
+Here we apply our bigger cuboids to get better predictions of the points at the border of subsets.</p>
+<dl class="function">
+<dt id="attention_points.benchmark.generate_predictions.export_ids">
+<code class="sig-name descname">export_ids</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">ids: List</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.generate_predictions.export_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export the provided ids to the provided filename
+:param filename: Path to export to
+:param ids: Ids that should be exported
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_predictions.generate_predictions">
+<code class="sig-name descname">generate_predictions</code><span class="sig-paren">(</span><em class="sig-param">model_save_path</em>, <em class="sig-param">features=True</em><span class="sig-paren">)</span><a class="headerlink" href="#attention_points.benchmark.generate_predictions.generate_predictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the predictions for each point in each of the validation scenes and outputs the results in the
+required ScanNet benchmark format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_save_path</strong> – Path to the saved model that should be restored for the predictions</p></li>
+<li><p><strong>features</strong> – Whether or not the models uses additional features (colors, normals) as input or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_predictions.get_validation_data">
+<code class="sig-name descname">get_validation_data</code><span class="sig-paren">(</span><em class="sig-param">sess</em>, <em class="sig-param">test=False</em><span class="sig-paren">)</span> &#x2192; Tuple[tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor, tensorflow.python.framework.ops.Tensor]<a class="headerlink" href="#attention_points.benchmark.generate_predictions.get_validation_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the validation dataset from the evaluation generator. This generator generates subsets containing
+each point of each validation scene and uses smart-scene subsets for better predictions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sess</strong> – tensorflow session</p></li>
+<li><p><strong>test</strong> – Set to true to load the test scenes instead of the validation scenes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Labels (Nx1), Coordinates (Nx3), Features(Nxk), Scene Name and the original point ids (Nx1) and mask (Nx1)
+for remapping</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_predictions.map_back">
+<code class="sig-name descname">map_back</code><span class="sig-paren">(</span><em class="sig-param">values: numpy.ndarray</em>, <em class="sig-param">original_idx: numpy.ndarray</em>, <em class="sig-param">mask: numpy.ndarray</em>, <em class="sig-param">res_shape</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#attention_points.benchmark.generate_predictions.map_back" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the subset masks to ignore the predictions for points outside of the cuboid (dxdxd’) that where only
+added to provide context to the points at the border of the cuboid. Because we choose random points by shuffling
+the points we here remap the predictions to their original ids (inverse-shuffle).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> – An array of values (e.g. labels, …)</p></li>
+<li><p><strong>original_idx</strong> – The ids the points had before being shuffled. Used to inverse-shuffle the points here</p></li>
+<li><p><strong>mask</strong> – The mask to remove the points of the larger cuboid that were only added to support the prediction of
+the border points of the original cuboid (smarter scene subsets)</p></li>
+<li><p><strong>res_shape</strong> – Shape into which we are remapping</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The remapped values in the shape res_shape</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="attention_points.benchmark.generate_predictions.map_to_nyu40">
+<code class="sig-name descname">map_to_nyu40</code><span class="sig-paren">(</span><em class="sig-param">labels: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#attention_points.benchmark.generate_predictions.map_to_nyu40" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mapping the ScanNet labels (1-20) back to the original NYU-40 labels</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> – labels in the ScanNet format (1-20) in the shape (Nx1)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>labels in the NYU-40 format (Nx1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="visualization.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="models.html" class="btn btn-neutral float-left" title="New Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tim Pfeilfe, Maximilian Rieger
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
