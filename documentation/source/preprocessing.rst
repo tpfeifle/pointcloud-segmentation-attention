@@ -24,9 +24,10 @@ Normal Extraction
     :undoc-members:
     :show-inheritance:
 
-Convert ply files to Numpy arrays
+Convert ply files to Numpy Arrays
 #################################
 .. automodule:: attention_points.scannet_dataset.local_dataset_computations.ply_to_npy
     :members:
     :undoc-members:
     :show-inheritance:
+

@@ -2,8 +2,10 @@
 Extracts training scores from the tensorboard logs and plots them with matplotlib.
 
 Plotted Models:
+
 - Attention Models (using attention in layer X)
 - PointNet++ with Additional Features
+
 """
 
 import matplotlib.pyplot as plt

@@ -1,9 +1,11 @@
 """
 Animates rotations of the ground-truth labels of scenes, as well as of their predicted labels.
 The rendered rotated views are stored as images and can be converted to videos with ``fmpeg``:
+
     ffmpeg -i "scene0XXX_0X/frame_%03d.png" -c:v mpeg4 -qscale:v 0 -r 24 scene0XXX_0X.mp4
 
 Inputs:
+
     - Points of a scene as .npy file (Nx3)
     - Labels (ground truth) of a scene as .npy file (Nx1)
     - Predicted labels of a scene as .npy file (Nx1)

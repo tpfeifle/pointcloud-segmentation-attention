@@ -5,8 +5,10 @@ Adapted from ScanNet benchmark scripts: https://github.com/ScanNet/ScanNet/tree/
     Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Niessner, Matthias
 
 Input:
+
 - the *_vh_clean_2.ply mesh
 - the labels defined by the *.aggregation.json and *_vh_clean_2.0.010000.segs.json files
+
 """
 
 import json

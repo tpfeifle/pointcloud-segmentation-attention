@@ -1,10 +1,12 @@
 """
 This module contains methods to transform the dataset These transformations include:
+
  - mapping the labels from nyu40 to range [0, 20]
  - rotating a point cloud
  - getting a random chunk of a scene
  - getting chunks for every area of a scene
  - getting all points of a scene grouped by chunks
+
 Some of these methods are implemented in both tensorflow and numpy.
 When executing on CPU the numpy versions are considerably faster.
 """
