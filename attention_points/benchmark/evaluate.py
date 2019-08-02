@@ -6,9 +6,11 @@ Adapted from ScanNet benchmark scripts: https://github.com/ScanNet/ScanNet/tree/
     Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Niessner, Matthias
 
 Input:
+
   - path to .txt prediction files
   - path to .txt ground truth files
   - output file to write results to
+
 Note that only the valid classes are used for evaluation,
 i.e., any ground truth label not in the valid label set
 is ignored in the evaluation.

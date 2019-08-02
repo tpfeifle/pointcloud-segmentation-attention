@@ -3,6 +3,7 @@ Animate the prediction changes in a scene over training time by reading the pred
 the training process
 
 Input:
+
 - Path to a pickle file containing the points of a scene
 - List of paths to pickle files containing the labels at different time steps of the training process
 """
@@ -11,6 +12,7 @@ import os
 import pickle
 import time
 from typing import List
+
 import pptk
 
 files = [os.path.join('/tmp/to_visualize1562169522_19.pickle'),
@@ -39,7 +41,7 @@ def normalize_colors():
         g_label_colors[idx] = [color_val[0] / 255.0, color_val[1] / 255.0, color_val[2] / 255.0]
 
 
-def animate_prediction_changes(points_path: os.path, files_to_visualize: List[os.path]):
+def animate_prediction_changes(points_path: str, files_to_visualize: List[str]):
     """
 
     :param points_path: Path to pickle file containing the points of a scene
