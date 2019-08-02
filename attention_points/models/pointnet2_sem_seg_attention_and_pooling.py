@@ -1,3 +1,7 @@
+"""
+PointNet++ Model using attention AND pooling for all layers (``pointnet_sa_module_attention_and_pooling``)
+"""
+
 import tensorflow as tf
 
 from attention_points.attention_scannet.attention_layer import pointnet_sa_module_attention_and_pooling
@@ -5,23 +9,23 @@ from pointnet2_tensorflow.utils import tf_util
 from pointnet2_tensorflow.utils.pointnet_util import pointnet_fp_module
 
 
-def placeholder_inputs(batch_size, num_point):
-    pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 3))
-    labels_pl = tf.placeholder(tf.int32, shape=(batch_size, num_point))
-    smpws_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point))
-    return pointclouds_pl, labels_pl, smpws_pl
+def get_model(point_cloud: tf.Tensor, is_training: tf.Variable, num_class: int, bn_decay=None) -> [tf.Tensor,
+                                                                                                   tf.Tensor]:
+    """
+    Return a PointNet++ model using Attention instead of the max-pooling operations
 
-
-def get_model(point_cloud, is_training, num_class, bn_decay=None):
-    """ Semantic segmentation PointNet, input is BxNx3, output Bxnum_class """
-    batch_size = point_cloud.get_shape()[0].value
-    num_point = point_cloud.get_shape()[1].value
+    :param point_cloud: Input points for the model (BxNx3)
+    :param is_training: Flag whether or not the parameters should be trained or not
+    :param num_class: Number of classes (e.g. 21 for ScanNet)
+    :param bn_decay: BatchNorm decay
+    :return: predictions for each point (B x N x num_class)
+    """
     end_points = {}
     l0_xyz = point_cloud
     l0_points = None
     end_points['l0_xyz'] = l0_xyz
 
-    # Layer 1
+    # Instead of the max-pooling we use here attention as well as max-pooling together for all layers
     l1_xyz, l1_points, l1_indices = pointnet_sa_module_attention_and_pooling(l0_xyz, l0_points, npoint=1024, radius=0.1,
                                                                              nsample=32,
                                                                              mlp=[32, 32, 64], mlp2=None,
@@ -57,7 +61,7 @@ def get_model(point_cloud, is_training, num_class, bn_decay=None):
     l0_points = pointnet_fp_module(l0_xyz, l1_xyz, l0_points, l1_points, [128, 128, 128], is_training, bn_decay,
                                    scope='fa_layer4')
 
-    # FC layers
+    # Full connected layers
     net = tf_util.conv1d(l0_points, 128, 1, padding='VALID', bn=True, is_training=is_training, scope='fc1',
                          bn_decay=bn_decay)
     end_points['feats'] = net

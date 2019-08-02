@@ -1,20 +1,25 @@
+"""
+PointNet++ Model using the additional features
+"""
+
 import tensorflow as tf
 
 from pointnet2_tensorflow.utils import tf_util
 from pointnet2_tensorflow.utils.pointnet_util import pointnet_sa_module, pointnet_fp_module
 
 
-def placeholder_inputs(batch_size, num_point):
-    pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 3))
-    labels_pl = tf.placeholder(tf.int32, shape=(batch_size, num_point))
-    smpws_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point))
-    return pointclouds_pl, labels_pl, smpws_pl
+def get_model(point_cloud: tf.Tensor, features: tf.Tensor, is_training: tf.Variable, num_class: int, bn_decay=None) -> \
+        [tf.Tensor, tf.Tensor]:
+    """
+    Return a PointNet++ model using additional features as input for the first layer
 
-
-def get_model(point_cloud, features, is_training, num_class, bn_decay=None):
-    """ Semantic segmentation PointNet, input is BxNx3, output Bxnum_class """
-    batch_size = point_cloud.get_shape()[0].value
-    num_point = point_cloud.get_shape()[1].value
+    :param point_cloud: Input points for the model (BxNx3)
+    :param features: The features for each point (BxNxk)
+    :param is_training: Flag whether or not the parameters should be trained or not
+    :param num_class: Number of classes (e.g. 21 for ScanNet)
+    :param bn_decay: BatchNorm decay
+    :return: predictions for each point (B x N x num_class)
+    """
     end_points = {}
     l0_xyz = point_cloud
     l0_points = features
@@ -44,7 +49,7 @@ def get_model(point_cloud, features, is_training, num_class, bn_decay=None):
     l0_points = pointnet_fp_module(l0_xyz, l1_xyz, l0_points, l1_points, [128, 128, 128], is_training, bn_decay,
                                    scope='fa_layer4')
 
-    # FC layers
+    # Full connected layers
     net = tf_util.conv1d(l0_points, 128, 1, padding='VALID', bn=True, is_training=is_training, scope='fc1',
                          bn_decay=bn_decay)
     end_points['feats'] = net
@@ -52,16 +57,6 @@ def get_model(point_cloud, features, is_training, num_class, bn_decay=None):
     net = tf_util.conv1d(net, num_class, 1, padding='VALID', activation_fn=None, scope='fc2')
 
     return net, end_points
-
-
-def get_loss(pred, label, smpw):
-    """ pred: BxNxC,
-        label: BxN, 
-	smpw: BxN """
-    classify_loss = tf.losses.sparse_softmax_cross_entropy(labels=label, logits=pred, weights=smpw)
-    tf.summary.scalar('classify loss', classify_loss)
-    tf.add_to_collection('losses', classify_loss)
-    return classify_loss
 
 
 if __name__ == '__main__':
