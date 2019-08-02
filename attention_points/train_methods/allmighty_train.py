@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from attention_points.models import pointnet2_sem_seg_features, pointnet2_sem_seg_attention
+from attention_points.models import pointnet2_sem_seg_features, pointnet2_sem_seg_attention, \
+    pointnet2_sem_seg_attention_single_layer
 from attention_points.scannet_dataset import precompute_dataset
 from pointnet2_tensorflow.models import pointnet2_sem_seg
 
@@ -115,7 +116,8 @@ def get_metrics(get_model: Callable,
                 bn_decay: tf.Variable,
                 labels: tf.Tensor,
                 sample_weight: tf.Tensor,
-                train: bool) \
+                train: bool,
+                attention_single_layer: int) \
         -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Operation, tf.Tensor, tf.Operation]:
     """
     gets model metrics
@@ -128,10 +130,14 @@ def get_metrics(get_model: Callable,
     :param labels: label tensor (BxN)
     :param sample_weight: sample weight tensor (BxN)
     :param train: bool, which indicates whether these are train metrics
+    :param attention_single_layer: if this value is not -1 than we use attention instead of
+                                   the `attention_single_layer`-th max-pooling layer
     :return: loss, accuracy, predictions(BxNxC), iou_update operation, iou, iou_reset operation
     """
     if features is not None:
         pred, _ = get_model(coordinates, features, is_training, 21, bn_decay=bn_decay)
+    elif attention_single_layer != -1:
+        pred, _ = get_model(coordinates, attention_single_layer, is_training, 21, bn_decay=bn_decay)
     else:
         pred, _ = get_model(coordinates, is_training, 21, bn_decay=bn_decay)
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=pred, weights=sample_weight)
@@ -279,19 +285,32 @@ def eval_model(is_training: tf.Variable,
     return best_iou
 
 
-def train(epochs=1000, batch_size=BATCH_SIZE, use_color: bool = True, use_normal: bool = True, n_epochs_to_val=4):
+def train(epochs=1000, batch_size=BATCH_SIZE, use_color: bool = True, use_normal: bool = True,
+          use_attention: bool = False, attention_single_layer: int = -1, use_subset: bool = False, n_epochs_to_val=4):
+    # make sure only valid combination
+    assert use_color != use_attention, "Attention not supported in combination with the usage of color features"
+    assert use_normal != use_attention, "Attention not supported in combination with the usage of color features"
+    assert attention_single_layer == -1 or not use_attention, "Either attention on all or a single layer"
+
     tf.Graph().as_default()
     tf.device('/gpu:0')
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
     sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
     # define train data
-    train_data = precompute_dataset.get_precomputed_train_data_set()
+    if use_subset:
+        train_data = precompute_dataset.get_precomputed_train_subset_data_set()
+    else:
+        train_data = precompute_dataset.get_precomputed_train_data_set()
+
     train_coordinates, train_labels, train_features, train_sample_weight = \
         get_data_tensors(train_data, sess, batch_size, use_color, use_normal)
 
     # define validation data
-    val_data = precompute_dataset.get_precomputed_val_data_set()
+    if use_subset:
+        val_data = precompute_dataset.get_precomputed_val_subset_data_set()
+    else:
+        val_data = precompute_dataset.get_precomputed_val_data_set()
     val_coordinates, val_labels, val_features, val_sample_weight = \
         get_data_tensors(val_data, sess, batch_size, use_color, use_normal)
 
@@ -303,6 +322,10 @@ def train(epochs=1000, batch_size=BATCH_SIZE, use_color: bool = True, use_normal
 
     if use_normal or use_color:
         model = pointnet2_sem_seg_features
+    elif use_attention:
+        model = pointnet2_sem_seg_attention
+    elif attention_single_layer != -1:
+        model = pointnet2_sem_seg_attention_single_layer
     else:
         model = pointnet2_sem_seg
     # TODO model
@@ -310,7 +333,7 @@ def train(epochs=1000, batch_size=BATCH_SIZE, use_color: bool = True, use_normal
     # train metrics
     train_loss, train_acc, train_pred, train_iou_update, train_iou, train_iou_reset = \
         get_metrics(model.get_model, train_coordinates, train_features, is_training, bn_decay, train_labels,
-                    train_sample_weight, True)
+                    train_sample_weight, True, attention_single_layer)
     optimizer = tf.train.AdamOptimizer(learning_rate)
 
     train_op = optimizer.minimize(train_loss, global_step=step)
@@ -318,7 +341,7 @@ def train(epochs=1000, batch_size=BATCH_SIZE, use_color: bool = True, use_normal
     # validation metrics
     val_loss, val_acc, val_pred, val_iou_update, val_iou, val_iou_reset = \
         get_metrics(model.get_model, val_coordinates, val_features, is_training, bn_decay, val_labels,
-                    train_sample_weight, False)
+                    train_sample_weight, False, attention_single_layer)
 
     # initialize variables
     variable_init = tf.global_variables_initializer()
