@@ -1,6 +1,4 @@
 """
-provides methods to use ScanNet Dataset
-
 Is used to copy normal vectors from .ply to .npy
 """
 import os
@@ -9,7 +7,13 @@ import numpy as np
 from plyfile import PlyData
 
 
-def normals_to_np_array(filename):
+def normals_to_np_array(filename: str) -> np.ndarray:
+    """
+    extracts the normal vectors from a ply file and stores them  in a numpy array
+
+    :param filename: path to ply file
+    :return: normals (Nx3)
+    """
     assert os.path.isfile(filename)
     with open(filename, 'rb') as f:
         ply_data = PlyData.read(f)
@@ -21,7 +25,15 @@ def normals_to_np_array(filename):
         return normals
 
 
-def read_normal_vectors(source_dir="C:/scannet_normal/", target_dir="C:/scannet-pre/"):
+def read_normal_vectors(source_dir: str = "C:/scannet_normal/", target_dir: str = "C:/scannet-pre/"):
+    """
+    Reads normal vectors from all ply files in source dir and saves them in target dir as numpy arrays
+    note that these ply files can be created with the normal_computation_meshlab script
+
+    :param source_dir: dir of source files
+    :param target_dir: dir to save numpy arrays
+    :return:
+    """
     i = 0
     for subdir, dirs, files in os.walk(source_dir):
         for file in files:

@@ -1,5 +1,6 @@
 """
 This script allows to use a Meshlab Server to compute and extract normal vectors from ply files
+This script is designed for Windows commands, to adapt the commands, see https://github.com/TheNerdJedi/MeshlabAuto
 """
 import os
 import subprocess

@@ -2,18 +2,19 @@
 provides methods to use ScanNet Dataset
 """
 import os
+from typing import Tuple
 
 import numpy as np
 import pptk
 from plyfile import PlyData
 
 
-def read_mesh_vertices(filename):
+def read_mesh_vertices(filename: str) -> Tuple[np.ndarray, np.ndarray]:
     """
     takes a ply file and extracts vertex coordinates and colors
 
-    :param filename:
-    :return: points, colors
+    :param filename: path to ply file
+    :return: points(Nx3), colors(Nx3)
     """
     assert os.path.isfile(filename)
     with open(filename, 'rb') as f:
@@ -30,12 +31,12 @@ def read_mesh_vertices(filename):
     return vertices, colors
 
 
-def read_label(filename):
+def read_label(filename: str) -> np.ndarray:
     """
     takes a ply file and returns labels
 
-    :param filename:
-    :return: labels
+    :param filename: path to ply file
+    :return: labels(N)
     """
     assert os.path.isfile(filename)
     with open(filename, 'rb') as f:
@@ -44,14 +45,14 @@ def read_label(filename):
     return np.array(labels)
 
 
-def to_np_array(filename):
+def to_np_array(filename: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     takes ply file and extracts point coordinates, colors, and labels
     warning, this method only works on label files, which have not the original color but the labels color assigned
     -> use with care
 
-    :param filename:
-    :return:
+    :param filename: path to ply file
+    :return: vertices(Nx3), colors(Nx3), labels(N)
     """
     assert os.path.isfile(filename)
     with open(filename, 'rb') as f:
@@ -71,10 +72,11 @@ def to_np_array(filename):
     return vertices, colors, labels
 
 
-def visualize(file="C:/scannet/scene0000_00_vh_clean_2.ply"):
+def visualize(file: str = "C:/scannet/scene0000_00_vh_clean_2.ply"):
     """
     visualizes ply file with pptk
 
+    :param file: path to file to visualize
     :return:
     """
     v1, c1 = read_mesh_vertices(file)
@@ -89,11 +91,13 @@ def visualize(file="C:/scannet/scene0000_00_vh_clean_2.ply"):
     view.attributes(c1)
 
 
-def copy_data_to_numpy(source_dir="C:/scannet", target_dir="C:/scannet-pre/"):
+def copy_data_to_numpy(source_dir: str = "C:/scannet", target_dir: str = "C:/scannet-pre/"):
     """
     iterates over a folder with scene and label ply files and extracts coordinates, color and labels for each scene
     saves the result in the target directory
 
+    :param source_dir: directory containing ply files
+    :param target_dir: directory to store numpy files at
     :return:
     """
     for subdir, dirs, files in os.walk(source_dir):
@@ -109,11 +113,13 @@ def copy_data_to_numpy(source_dir="C:/scannet", target_dir="C:/scannet-pre/"):
                 np.save(target_dir + "colors/" + file, c)
 
 
-def copy_test_data_to_numpy(source_dir="C:/scannet", target_dir="C:/scannet-pre/"):
+def copy_test_data_to_numpy(source_dir: str = "C:/scannet", target_dir: str = "C:/scannet-pre/"):
     """
     iterates over a folder with test ply files and extracts point coordinates and color for each scene
     saves the result in the target directory
 
+    :param source_dir: directory containing ply files
+    :param target_dir: directory to store numpy files at
     :return:
     """
     for subdir, dirs, files in os.walk(source_dir):
@@ -125,11 +131,11 @@ def copy_test_data_to_numpy(source_dir="C:/scannet", target_dir="C:/scannet-pre/
                 np.save(target_dir + "points/" + file, v)
 
 
-def rename_files(dir):
+def rename_files(dir: str):
     """
     renames files to omit unnecessary endings
 
-    :param dir:
+    :param dir: directory of files to rename
     :return:
     """
     files = os.listdir(dir)

@@ -4,6 +4,7 @@ This allows to speed up training, as the random subscenes do not have to be gene
 """
 import os.path
 import pickle
+from typing import Generator
 
 import numpy as np
 import tensorflow as tf
@@ -11,9 +12,15 @@ import tensorflow as tf
 from attention_points.scannet_dataset import generator_dataset, data_transformation, complete_scene_loader
 
 
-def precompute_train_data(epochs, elements_per_epoch, out_dir, dataset, add_epoch=0):
+def precompute_train_data(epochs: int, elements_per_epoch: int, out_dir: str, dataset: tf.data.Dataset,
+                          add_epoch: int = 0):
     """
     precomputes train data
+    files saved are a tuple of numpy arrays:
+        (points(Nx3), labels(N), colors(N,3), normals(Nx3), sample_weight(N))
+        N is the number of points needed by the model (default 8192)
+    naming scheme: epoch-scene.pickle
+
     :param epochs: number of epochs to precompute (random chunks do not cover whole scenes, set >=20)
     :param elements_per_epoch: number of elements loaded from dataset for a single epoch
     :param out_dir: directory to save files to
@@ -38,10 +45,15 @@ def precompute_train_data(epochs, elements_per_epoch, out_dir, dataset, add_epoc
                 raise ValueError("the file already exists")
 
 
-def precompute_val_data(elements, out_dir,
-                        dataset=generator_dataset.get_dataset("val").prefetch(4).map(data_transformation.label_map)):
+def precompute_val_data(elements: int, out_dir: str, dataset: tf.data.Dataset = generator_dataset
+                        .get_dataset("val").prefetch(4).map(data_transformation.label_map)):
     """
     precomputes validation data
+    files saved are a tuple of numpy arrays:
+        (points(Nx3), labels(N), colors(N,3), normals(Nx3), sample_weight(N))
+        N is the number of points needed by the model (default 8192)
+    naming scheme: scene-subscene.pickle
+
     :param elements: number of elements to load from dataset
     :param out_dir: directory to save files to
     :param dataset: tensorflow dataset to load scenes from
@@ -65,9 +77,11 @@ def precompute_val_data(elements, out_dir,
                 raise ValueError("the file already exists")
 
 
-def generate_eval_data():
+def generate_eval_data() -> Generator:
     """
     generator which iterates over precomputed validation set and yields single subsets
+    also yields the scene name, a boolean mask for points with meaningful predictions and original point indices
+    :return (points(Nx3), labels(N), colors(Nx3), normals(Nx3), scene_name, mask(N), indices(N))
     """
     for scene_name in generator_dataset.scene_name_generator("val"):
         points_val, labels_val, colors_val, normals_val = generator_dataset.load_from_scene_name(scene_name)
@@ -81,9 +95,11 @@ def generate_eval_data():
             yield (points_val, labels_val, colors_val, normals_val, scene_name.encode('utf-8'), mask, points_orig_idxs)
 
 
-def generate_test_data():
+def generate_test_data() -> Generator:
     """
     generator which iterates over precomputed test set and yields single subsets
+    also yields the scene name, a boolean mask for points with meaningful predictions and original point indices
+    :return (points(Nx3), colors(Nx3), normals(Nx3), scene_name, mask(N), indices(N))
     """
     for scene_name in generator_dataset.scene_name_generator("test"):
         points_val, colors_val, normals_val = generator_dataset.load_from_scene_name_test(scene_name)
@@ -95,9 +111,10 @@ def generate_test_data():
             yield (points_val, colors_val, normals_val, scene_name.encode('utf-8'), mask, points_orig_idxs)
 
 
-def eval_dataset_from_generator():
+def eval_dataset_from_generator() -> tf.data.Dataset:
     """
-    dataset from eval data generator
+    tensorflow dataset from eval data generator
+    :return tf dataset
     """
     gen = generate_eval_data
     return tf.data.Dataset.from_generator(gen,
@@ -109,9 +126,10 @@ def eval_dataset_from_generator():
                                                          tf.TensorShape([None])))
 
 
-def test_dataset_from_generator():
+def test_dataset_from_generator() -> tf.data.Dataset:
     """
     tensorflow dataset from test data generator
+    :return tf dataset
     """
     gen = generate_test_data
     return tf.data.Dataset.from_generator(gen,
@@ -123,9 +141,12 @@ def test_dataset_from_generator():
                                                          tf.TensorShape([None])))
 
 
-def precomputed_train_data_generator(dir="/home/tim/data/train_precomputed"):
+def precomputed_train_data_generator(dir: str = "/home/tim/data/train_precomputed") -> Generator:
     """
     iterates over precomputed train data and yields single chunks
+
+    :param dir: directory of precomputed train data
+    :return (points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))
     """
     file_list = sorted(os.listdir(dir))
     while True:
@@ -137,9 +158,11 @@ def precomputed_train_data_generator(dir="/home/tim/data/train_precomputed"):
                     yield points_val, labels_val, colors_val, normals_val, sample_weight_val
 
 
-def get_precomputed_train_data_set():
+def get_precomputed_train_data_set() -> tf.data.Dataset:
     """
     tensorflow dataset from precomputed train data generator
+
+    :return tf dataset
     """
     gen = precomputed_train_data_generator
     return tf.data.Dataset.from_generator(gen,
@@ -149,9 +172,12 @@ def get_precomputed_train_data_set():
                                                          tf.TensorShape([None])))
 
 
-def precomputed_val_data_generator(dir="/home/tim/data/val_precomputed"):
+def precomputed_val_data_generator(dir: str = "/home/tim/data/val_precomputed") -> Generator:
     """
     iterates over precomputed val data and yields single chunks
+
+    :param dir: directory of precomputed val data
+    :return (points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))
     """
     file_list = sorted(os.listdir(dir))
     while True:
@@ -163,9 +189,11 @@ def precomputed_val_data_generator(dir="/home/tim/data/val_precomputed"):
                     yield points_val, labels_val, colors_val, normals_val, sample_weight_val
 
 
-def get_precomputed_val_data_set():
+def get_precomputed_val_data_set() -> tf.data.Dataset:
     """
     tensorflow dataset from precomputed val data generator
+
+    :return tf dataset
     """
     gen = precomputed_val_data_generator
     return tf.data.Dataset.from_generator(gen,
@@ -175,9 +203,12 @@ def get_precomputed_val_data_set():
                                                          tf.TensorShape([None])))
 
 
-def precomputed_train_subset_data_generator(dir="/home/tim/data/train_subset_precomputed"):
+def precomputed_train_subset_data_generator(dir: str = "/home/tim/data/train_subset_precomputed") -> Generator:
     """
     iterates over precomputed subset of train data and yields single chunks
+
+    :param dir: directory of precomputed subset of train data
+    :return (points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))
     """
     file_list = sorted(os.listdir(dir))
     while True:
@@ -189,9 +220,11 @@ def precomputed_train_subset_data_generator(dir="/home/tim/data/train_subset_pre
                     yield points_val, labels_val, colors_val, normals_val, sample_weight_val
 
 
-def get_precomputed_train_subset_data_set():
+def get_precomputed_train_subset_data_set() -> tf.data.Dataset:
     """
     tensorflow dataset from precomputed subset of train data generator
+
+    :return tf dataset
     """
     gen = precomputed_train_data_generator
     return tf.data.Dataset.from_generator(gen,
@@ -201,9 +234,12 @@ def get_precomputed_train_subset_data_set():
                                                          tf.TensorShape([None])))
 
 
-def precomputed_val_subset_data_generator(dir="/home/tim/data/val_precomputed"):
+def precomputed_val_subset_data_generator(dir: str = "/home/tim/data/val_precomputed") -> Generator:
     """
     iterates over precomputed subset of val data and yields single chunks
+
+    :param dir: directory of precomputed subset of val data
+    :return (points(NX3), labels(N), colors(Nx3), normals(Nx3), sample_weight(N))
     """
     file_list = sorted(os.listdir(dir))
     file_list = file_list[:len(file_list) // 3]
@@ -216,9 +252,11 @@ def precomputed_val_subset_data_generator(dir="/home/tim/data/val_precomputed"):
                     yield points_val, labels_val, colors_val, normals_val, sample_weight_val
 
 
-def get_precomputed_val_subset_data_set():
+def get_precomputed_val_subset_data_set() -> tf.data.Dataset:
     """
     tensorflow dataset from precomputed subset of val data generator
+
+    :return tf dataset
     """
     gen = precomputed_val_subset_data_generator
     return tf.data.Dataset.from_generator(gen,
@@ -231,42 +269,8 @@ def get_precomputed_val_subset_data_set():
 def precompute_subset_train_data():
     """
     precomputes data from a subset of the scenes in the training set
+
     :return:
     """
     ds = data_transformation.get_transformed_dataset("train_subset").prefetch(4)
     precompute_train_data(100, 1201 // 3, "/home/tim/data/train_subset_precomputed", ds, 0)
-
-
-def main():
-    # debug validation iterator
-    sess = tf.Session()
-    val_ds = get_precomputed_val_data_set()
-    batch = val_ds.make_one_shot_iterator().get_next()
-    first_batch = sess.run(batch)
-    print("val batch", first_batch)
-    for i in first_batch:
-        print(i.shape)
-
-    # debug train iterator
-    train_ds = get_precomputed_train_data_set()
-    train_ds = train_ds.batch(16).prefetch(2)
-    batch = train_ds.make_one_shot_iterator().get_next()
-    first_batch = sess.run(batch)
-    print("train batch", first_batch)
-
-    # for data in generate_eval_data():
-    #    a = data
-    # precompute a subset of the data
-    # precompute_subset_train_data()
-
-    # precompute val data
-    # precompute_val_data(312, "/home/tim/data/val_precomputed")
-    # print("done")
-
-    # precompute train data
-    # ds = data_transformation.get_transformed_dataset("train").prefetch(4)
-    # precompute_train_data(60, 1201, "/home/tim/data/train_precomputed", ds, 40)
-
-
-if __name__ == '__main__':
-    main()
