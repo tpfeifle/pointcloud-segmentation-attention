@@ -113,11 +113,25 @@ def pointnet_sa_module(xyz, points, npoint, radius, nsample, mlp, mlp2, group_al
         if group_all:
             nsample = xyz.get_shape()[1].value
             new_xyz, new_points, idx, grouped_xyz = sample_and_group_all(xyz, points, use_xyz)
-        else:
+        else:  # TIM: this case gets executed
             new_xyz, new_points, idx, grouped_xyz = sample_and_group(npoint, radius, nsample, xyz, points, knn, use_xyz)
 
         # Point Feature Embedding
         if use_nchw: new_points = tf.transpose(new_points, [0, 3, 1, 2])
+        '''rgb_batches = []
+        for i in range(idx.shape[0]):
+            rgb_batches.append(tf.gather(rgb[i], idx[i]))
+        rgb_filtered = tf.stack(rgb_batches, axis=0)
+        # rgb_out = tf.batch_gather(rgb, idx)
+        groups = tf.split(idx, 1024, axis=1) # tf.shape(idx)[1]
+        rgb_groups = []
+        for group in groups:
+            rgb_group = tf.gather(rgb, group, axis=2)
+        rgb_tensor = tf.stack(rgb_groups, axis=0)
+        #point_cloud_rgb = tf.gather(rgb, idx, axis=1)
+        # point_cloud_rgb = tf.expand_dims(rgb, [2])
+        new_points = tf.concat(axis=3, values=[new_points, rgb_groups])'''
+
         for i, num_out_channel in enumerate(mlp):
             new_points = tf_util.conv2d(new_points, num_out_channel, [1, 1],
                                         padding='VALID', stride=[1, 1],
