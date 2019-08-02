@@ -1,9 +1,10 @@
 # Attention Points
 
+The documentation for the code can be found [here](Documentation.html)
 
 
 ##Structure
-Our project builds on the `PointNet++ implementation of Charles Qi <https://github.com/charlesq34/pointnet2>`. In our repository the folder `pointnet2_tensorflow` contains an almost untouched version of this repository.
+Our project builds on the [PointNet++ implementation of Charles Qi](https://github.com/charlesq34/pointnet2). In our repository the folder `pointnet2_tensorflow` contains an almost untouched version of this repository.
 
 The folder `attention_points` contains our new code, including a new data pipeline, model variations,
 training methods, benchmark scripts, visualizations and a new way to create predictions for large point clouds.
@@ -43,7 +44,7 @@ as well as the confusion matrix.
 The predicted labels can also be qualitatively evaluated. The script `qualitative_animations.py` takes 
 the points and predicted labels of scenes as input and visualizes them using the pptk-viewer.
 
-!["Example frame of scene0660_00"](attention_points/visualization/examples/frame_079.png?raw=true "Frame of scene 0660_00")	
+!["Example frame of scene0660_00"](https://github.com/MaxRieger96/attention-points/blob/master/attention_points/visualization/examples/frame_079.png?raw=true "Frame of scene 0660_00")	
 
 
 It rotates the scenes and saves those animation frames as images. Those can be converted into videos using
