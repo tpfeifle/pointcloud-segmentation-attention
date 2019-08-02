@@ -3,7 +3,7 @@
 The documentation for the code can be found [here](Documentation.html)
 
 
-##Structure
+## Structure
 Our project builds on the [PointNet++ implementation of Charles Qi](https://github.com/charlesq34/pointnet2). In our repository the folder `pointnet2_tensorflow` contains an almost untouched version of this repository.
 
 The folder `attention_points` contains our new code, including a new data pipeline, model variations,
@@ -12,17 +12,17 @@ training methods, benchmark scripts, visualizations and a new way to create pred
 The following gives an overview over the different modules and their functionality.
 
 
-##Preprocessing
+## Preprocessing
 Methods to preprocess the data provided by ScanNet.
 Includes computation of normal vectors, extraction from ply to numpy, etc..
 
-##Dataset
+## Dataset
 Methods to load and transform data efficiently for training and evaluation.
 
-##Models
+## Models
 Different models using Attention and features (colors, normals) can be found in the folder models.
 
-##Training
+## Training
 We have one training method that works for all our different models and uses our precomputed dataset generators.
 
 ### Benchmark
