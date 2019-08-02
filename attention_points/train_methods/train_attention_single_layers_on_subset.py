@@ -50,7 +50,7 @@ def show_prediction_historgram(prediction):
 def train_all():
     global LOG_DIR
     global class_weights
-    for i, model_func in enumerate([model.get_model_l1, model.get_model_l2, model.get_model_l3, model.get_model_l4]):
+    for i, model_func in enumerate([model.get_model, model.get_model, model.get_model, model.get_model]):
         tf.reset_default_graph()
         class_weights = tf.constant([0, 2.743064592944318, 3.0830506790927132, 4.785754459526457, 4.9963745147506184,
                                      4.372710774561782, 5.039124880965811, 4.86451825464344, 4.717751595568025,
@@ -58,10 +58,10 @@ def train_all():
                                      5.127458225110977, 5.086056870814752, 5.3831185190895265, 5.422684124268539,
                                      5.422955391988761, 5.433705358072363, 5.417426773812747, 4.870172044153657])
         LOG_DIR = os.path.join(f'/home/tim/training_log/subset/attention_in_layer_{i}_{int(time.time())}')
-        train_single_layer(model_func)
+        train_single_layer(model_func, i)
 
 
-def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to_val=4):
+def train_single_layer(get_model, attention_layer, epochs=250, batch_size=BATCH_SIZE, n_epochs_to_val=4):
     tf.Graph().as_default()
     tf.device('/gpu:0')
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
@@ -102,7 +102,7 @@ def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to
     learning_rate = get_learning_rate(step)
 
     # train metrics
-    train_pred, _ = get_model(train_coordinates, is_training_pl, 21, bn_decay=bn_decay)
+    train_pred, _ = get_model(train_coordinates, attention_layer, is_training_pl, 21, bn_decay=bn_decay)
     train_loss = tf.losses.sparse_softmax_cross_entropy(labels=train_labels, logits=train_pred,
                                                         weights=train_sample_weight)
 
@@ -127,7 +127,7 @@ def train_single_layer(get_model, epochs=250, batch_size=BATCH_SIZE, n_epochs_to
     train_op = optimizer.minimize(train_loss, global_step=step)
 
     # validation metrics
-    val_pred, _ = get_model(val_coordinates, is_training_pl, 21)
+    val_pred, _ = get_model(val_coordinates, attention_layer, is_training_pl, 21)
     val_loss = tf.losses.sparse_softmax_cross_entropy(labels=val_labels, logits=val_pred,
                                                       weights=val_sample_weight)
 
