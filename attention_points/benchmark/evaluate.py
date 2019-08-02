@@ -1,5 +1,6 @@
 """
 Evaluates semantic label task
+
 Adapted from ScanNet benchmark scripts: https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts
     Authors of ScanNet:
     Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Niessner, Matthias

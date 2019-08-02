@@ -1,6 +1,6 @@
 """
 Animates rotations of the ground-truth labels of scenes, as well as of their predicted labels.
-The rendered rotated views are stored as images and can be converted to videos with ``fmpeg``:
+The rendered rotated views are stored as images and can be converted to videos with ``ffmpeg``:
     ffmpeg -i "scene0XXX_0X/frame_%03d.png" -c:v mpeg4 -qscale:v 0 -r 24 scene0XXX_0X.mp4
 
 Inputs:
