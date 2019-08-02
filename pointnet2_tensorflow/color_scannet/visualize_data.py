@@ -71,9 +71,12 @@ def label_map_more_paraemters(labels):
     mapped_labels = np.array(list(map(lambda label: map_values.get(label, 0), labels)))
     return mapped_labels
 
-def load_from_pred(scene_name, pre_files_dir="/Users/tim/Downloads/for_visualization") -> List[np.ndarray]:
+def load_from_pred(scene_name, pre_files_dir="/Users/tim/Downloads/for_visualization", baseline=False) -> List[np.ndarray]:
     points = np.load(pre_files_dir + "/points/" + scene_name + ".npy")
-    labels = np.load(pre_files_dir + "/labels/" + scene_name + ".npy")
+    if baseline:
+        labels = np.load(pre_files_dir + "/labels_baseline/" + scene_name + ".npy")
+    else:
+        labels = np.load(pre_files_dir + "/labels/" + scene_name + ".npy")
     labels = labels.astype(np.int32)
     #labels = label_map_more_paraemters(labels).astype(np.int32)
     colors = list(map(lambda label: g_label_colors[label], labels))
@@ -104,7 +107,7 @@ def animate_and_store(view, points, scene_name, sub_path):
 
 # nice: 256_02, 660_00, 647_01
 scene_names = [#"scene0488_00", "scene0063_00", "scene0095_01", "scene0203_00", "scene0256_02", "scene0474_05",
-               "scene0500_01", "scene0660_00", "scene0702_01", "scene0648_01"]
+               "scene0256_02", "scene0500_01", "scene0660_00", "scene0702_01", "scene0648_01"]
 #scene_name =
 '''
 drwxr-xr-x  195 tim  staff      6240 Jul 26 10:51 scene0063_00
@@ -120,16 +123,24 @@ def do_it():
         v_gt = pptk.viewer(points_gt, colors_gt)
         v_gt.set(point_size=0.009, bg_color=(1, 1, 1, 1), floor_color=(1, 1, 1, 1), show_axis=False, show_grid=False, r=10)
 
-        points, colors = load_from_pred(scene_name)
+        '''points, colors = load_from_pred(scene_name)
 
         for idx, color in enumerate(colors_gt):
             if color[0] == 0:
                 colors[idx] = color
 
         v2 = pptk.viewer(points, colors)
-        v2.set(point_size=0.009, bg_color=(1, 1, 1, 1), floor_color=(1, 1, 1, 1), show_axis=False, show_grid=False, r=10)
+        v2.set(point_size=0.009, bg_color=(1, 1, 1, 1), floor_color=(1, 1, 1, 1), show_axis=False, show_grid=False, r=10)'''
 
+        points, colors = load_from_pred(scene_name, baseline=True)
 
+        for idx, color in enumerate(colors_gt):
+            if color[0] == 0:
+                colors[idx] = color
+
+        v2 = pptk.viewer(points, colors)
+        v2.set(point_size=0.009, bg_color=(1, 1, 1, 1), floor_color=(1, 1, 1, 1), show_axis=False, show_grid=False,
+               r=10)
 
 
         animate_and_store(v_gt, points_gt, scene_name, '/groundtruth')
