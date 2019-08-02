@@ -1,19 +1,22 @@
+"""
+Adapted from ScanNet benchmark scripts: https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts
+    Authors of ScanNet:
+    Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Niessner, Matthias
+"""
+
 # Evaluates semantic label task
 # Input:
 #   - path to .txt prediction files
 #   - path to .txt ground truth files
 #   - output file to write results to
-# Note that only the valid classes are used for evalu ation,
+# Note that only the valid classes are used for evaluation,
 # i.e., any ground truth label not in the valid label set
 # is ignored in the evaluation.
 #
-# example usage: evaluate_semantic_label.py --scan_path [path to scan data] --output_file [output file]
 
 import inspect
-# python imports
 import os
 import sys
-
 import numpy as np
 
 try:
@@ -31,15 +34,6 @@ def load_ids(filename):
     ids = np.array(ids, dtype=np.int64)
     return ids
 
-
-'''parser = argparse.ArgumentParser()
-parser.add_argument('--pred_path', required=True, help='path to directory of predicted .txt files')
-parser.add_argument('--gt_path', required=True, help='path to gt files')
-parser.add_argument('--output_file', default='', help='output file [default: pred_path/semantic_label_evaluation.txt]')
-opt = parser.parse_args()
-
-if opt.output_file == '':
-    opt.output_file = os.path.join(opt.pred_path, 'semantic_label_evaluation.txt')'''
 
 CLASS_LABELS = ['wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf', 'picture',
                 'counter', 'desk', 'curtain', 'refrigerator', 'shower curtain', 'toilet', 'sink', 'bathtub',
@@ -123,13 +117,10 @@ def evaluate(pred_files, gt_files, output_file):
         label_name = CLASS_LABELS[i]
         label_id = VALID_CLASS_IDS[i]
         class_ious[label_name] = get_iou(label_id, confusion)
-    # print
     print('classes          IoU')
     print('----------------------------')
     for i in range(len(VALID_CLASS_IDS)):
         label_name = CLASS_LABELS[i]
-        # print('{{0:<14s}: 1:>5.3f}'.format(label_name, class_ious[label_name][0]))
-        # if(not isinstance(class_ious[label_name], float)): # TODO this is custom and should not be here
         print('{0:<14s}: {1:>5.3f}   ({2:>6d}/{3:<6d})'.format(label_name, class_ious[label_name][0],
                                                                class_ious[label_name][1], class_ious[label_name][2]))
     write_result_file(confusion, class_ious, output_file)
