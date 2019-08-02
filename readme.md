@@ -1,26 +1,29 @@
 # Attention Points
-This project uses an attention mechanism to replace the max pooling operation of PointNet++.
-As a dataset we used ScanNetv2.
-It also contains a model which can use more features than the reference implementation,
-i.e. color features and surface normal vectors of points.
-
-### Structure
-`pointnet2_tensorflow` contains an almost untouched version of the reference implementation of PointNet++ by Charles Qi.
-
-`pytorch_implementation` contains an alternative implementation of PointNet++ written in Pytorch by [halimacc https://github.com/halimacc/pointnet3].
-
-`Attention_Points ` contains our additional code, including a new data pipeline, model variations,
-training methods, visualizations and a new way create predictions for large point clouds.
 
 
-### Dataset
 
-# Running the models
-### Models
-### Training Methods
+##Structure
+Our project builds on the `PointNet++ implementation of Charles Qi <https://github.com/charlesq34/pointnet2>`. In our repository the folder `pointnet2_tensorflow` contains an almost untouched version of this repository.
+
+The folder `attention_points` contains our new code, including a new data pipeline, model variations,
+training methods, benchmark scripts, visualizations and a new way to create predictions for large point clouds.
+
+The following gives an overview over the different modules and their functionality.
 
 
-## Output
+##Preprocessing
+Methods to preprocess the data provided by ScanNet.
+Includes computation of normal vectors, extraction from ply to numpy, etc..
+
+##Dataset
+Methods to load and transform data efficiently for training and evaluation.
+
+##Models
+Different models using Attention and features (colors, normals) can be found in the folder models.
+
+##Training
+We have one training method that works for all our different models and uses our precomputed dataset generators.
+
 ### Benchmark
 To predict labels for each point in each scene `generate_predictions.py` takes as input a trained model.
 We first create subsets for each scene (see `scannet_dataset/complete_scene_loader.py`), each containing random 8192 points
